@@ -10,6 +10,7 @@ import { DetallePagos } from './DetallePagos'
 import { ResumenCierre } from './ResumenCierre'
 import { guardarBorrador, leerBorrador, borrarBorrador } from './borrador'
 import { urlLogoNegocio } from '../../lib/logo'
+import { comprimirImagen } from '../../lib/imagen'
 import type { GastoLocal } from './types'
 
 interface NegocioAsignado {
@@ -277,10 +278,11 @@ export function NuevoCierrePage() {
         let fotoPath: string | null = null
 
         if (gasto.foto) {
+          const fotoComprimida = await comprimirImagen(gasto.foto)
           const path = `${negocio.id}/${cierreId}/${gasto.id}.jpg`
           const { error: uploadError } = await supabase.storage
             .from('soportes-gastos')
-            .upload(path, gasto.foto, { contentType: gasto.foto.type })
+            .upload(path, fotoComprimida, { contentType: fotoComprimida.type })
 
           if (uploadError) {
             throw new Error(`Cierre guardado, pero falló la foto de un gasto: ${uploadError.message}`)
