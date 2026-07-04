@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../lib/AuthContext'
-import { hoyBogota } from '../../lib/fecha'
+import { diasDeSemana, hoyBogota, lunesDeSemana, sumarDias } from '../../lib/fecha'
 import { PantallaMensaje } from '../../components/PantallaMensaje'
 
 interface Negocio {
@@ -15,15 +15,29 @@ interface Cajero {
   nombre: string
 }
 
+const NOMBRES_DIA = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
+
+function etiquetaDia(fechaIso: string, indice: number) {
+  const [, mes, dia] = fechaIso.split('-')
+  return `${NOMBRES_DIA[indice]} ${dia}/${mes}`
+}
+
+function clave(negocioId: string, fecha: string) {
+  return `${negocioId}__${fecha}`
+}
+
 export function TurnosPage() {
   const { profile } = useAuth()
-  const [fecha, setFecha] = useState(hoyBogota())
+  const [lunes, setLunes] = useState(() => lunesDeSemana(hoyBogota()))
   const [negocios, setNegocios] = useState<Negocio[]>([])
   const [cajeros, setCajeros] = useState<Cajero[]>([])
   const [asignaciones, setAsignaciones] = useState<Record<string, string>>({})
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [guardandoNegocio, setGuardandoNegocio] = useState<string | null>(null)
+  const [guardandoClave, setGuardandoClave] = useState<string | null>(null)
+
+  const dias = diasDeSemana(lunes)
+  const hoy = hoyBogota()
 
   useEffect(() => {
     if (!supabase) return
@@ -51,8 +65,9 @@ export function TurnosPage() {
 
     const { data, error: err } = await supabase
       .from('asignaciones')
-      .select('negocio_id, profile_id')
-      .eq('fecha', fecha)
+      .select('negocio_id, profile_id, fecha')
+      .gte('fecha', lunes)
+      .lte('fecha', sumarDias(lunes, 6))
 
     if (err) {
       setError(err.message)
@@ -62,7 +77,7 @@ export function TurnosPage() {
 
     const mapa: Record<string, string> = {}
     for (const a of data ?? []) {
-      mapa[a.negocio_id] = a.profile_id
+      mapa[clave(a.negocio_id, a.fecha)] = a.profile_id
     }
     setAsignaciones(mapa)
     setCargando(false)
@@ -71,18 +86,19 @@ export function TurnosPage() {
   useEffect(() => {
     cargarAsignaciones()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fecha])
+  }, [lunes])
 
-  async function asignar(negocioId: string, profileId: string) {
+  async function asignar(negocioId: string, fecha: string, profileId: string) {
     if (!supabase || !profile) return
-    setGuardandoNegocio(negocioId)
+    const claveCelda = clave(negocioId, fecha)
+    setGuardandoClave(claveCelda)
     setError(null)
 
-    // Un negocio, un cajero por día: borra cualquier asignación previa de este negocio hoy.
+    // Un negocio, un cajero por día: borra cualquier asignación previa de este negocio ese día.
     await supabase.from('asignaciones').delete().eq('negocio_id', negocioId).eq('fecha', fecha)
 
     if (profileId) {
-      // Un cajero, un punto por día: borra cualquier otra asignación de este cajero hoy.
+      // Un cajero, un punto por día: borra cualquier otra asignación de este cajero ese día.
       await supabase.from('asignaciones').delete().eq('profile_id', profileId).eq('fecha', fecha)
 
       const { error: err } = await supabase.from('asignaciones').insert({
@@ -98,7 +114,7 @@ export function TurnosPage() {
     }
 
     await cargarAsignaciones()
-    setGuardandoNegocio(null)
+    setGuardandoClave(null)
   }
 
   if (error) {
@@ -107,14 +123,31 @@ export function TurnosPage() {
 
   return (
     <div className="space-y-4">
-      <div className="rounded-xl bg-white p-4 shadow-sm space-y-1">
-        <label className="text-sm font-medium text-gray-700">Fecha</label>
-        <input
-          type="date"
-          value={fecha}
-          onChange={(e) => setFecha(e.target.value)}
-          className="block rounded-lg border border-gray-300 px-3 py-2 text-sm"
-        />
+      <div className="rounded-xl bg-white p-4 shadow-sm flex flex-wrap items-center gap-3">
+        <button
+          type="button"
+          onClick={() => setLunes((l) => sumarDias(l, -7))}
+          className="rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50"
+        >
+          ← Semana anterior
+        </button>
+        <button
+          type="button"
+          onClick={() => setLunes(lunesDeSemana(hoy))}
+          className="rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50"
+        >
+          Semana actual
+        </button>
+        <button
+          type="button"
+          onClick={() => setLunes((l) => sumarDias(l, 7))}
+          className="rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50"
+        >
+          Semana siguiente →
+        </button>
+        <span className="text-sm text-gray-500">
+          {dias[0]} — {dias[6]}
+        </span>
       </div>
 
       <div className="rounded-xl bg-white shadow-sm overflow-x-auto">
@@ -124,34 +157,46 @@ export function TurnosPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-gray-100 text-left text-gray-500">
-                <th className="px-4 py-3 font-medium">Negocio</th>
-                <th className="px-4 py-3 font-medium">Cajero asignado</th>
+                <th className="px-4 py-3 font-medium sticky left-0 bg-white">Negocio</th>
+                {dias.map((d, i) => (
+                  <th
+                    key={d}
+                    className={`px-2 py-3 font-medium text-center ${d === hoy ? 'text-violet-600' : ''}`}
+                  >
+                    {etiquetaDia(d, i)}
+                  </th>
+                ))}
               </tr>
             </thead>
             <tbody>
               {negocios.map((n) => (
                 <tr key={n.id} className="border-b border-gray-50 last:border-0">
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-3 sticky left-0 bg-white">
                     <span className="inline-flex items-center gap-2">
                       <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: n.color }} />
                       {n.nombre}
                     </span>
                   </td>
-                  <td className="px-4 py-3">
-                    <select
-                      value={asignaciones[n.id] ?? ''}
-                      onChange={(e) => asignar(n.id, e.target.value)}
-                      disabled={guardandoNegocio === n.id}
-                      className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
-                    >
-                      <option value="">Sin asignar</option>
-                      {cajeros.map((c) => (
-                        <option key={c.id} value={c.id}>
-                          {c.nombre}
-                        </option>
-                      ))}
-                    </select>
-                  </td>
+                  {dias.map((d) => {
+                    const claveCelda = clave(n.id, d)
+                    return (
+                      <td key={d} className={`px-2 py-2 ${d === hoy ? 'bg-violet-50/40' : ''}`}>
+                        <select
+                          value={asignaciones[claveCelda] ?? ''}
+                          onChange={(e) => asignar(n.id, d, e.target.value)}
+                          disabled={guardandoClave === claveCelda}
+                          className="w-full rounded-lg border border-gray-300 px-2 py-1.5 text-xs"
+                        >
+                          <option value="">Sin asignar</option>
+                          {cajeros.map((c) => (
+                            <option key={c.id} value={c.id}>
+                              {c.nombre}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
+                    )
+                  })}
                 </tr>
               ))}
             </tbody>
