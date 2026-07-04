@@ -5,6 +5,8 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+const ROLES_VALIDOS = ['super_admin', 'admin', 'cajero']
+
 function jsonResponse(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
@@ -49,14 +51,19 @@ Deno.serve(async (req) => {
       .eq('id', user.id)
       .single()
 
-    if (!perfilLlamador || perfilLlamador.rol !== 'admin' || !perfilLlamador.activo) {
-      return jsonResponse({ error: 'Solo un administrador puede crear cajeros' }, 403)
+    if (!perfilLlamador || perfilLlamador.rol !== 'super_admin' || !perfilLlamador.activo) {
+      return jsonResponse({ error: 'Solo un Super Admin puede crear usuarios' }, 403)
     }
 
-    const { email, password, nombre } = await req.json()
+    const { email, password, nombre, rol } = await req.json()
 
     if (!email || !password || !nombre) {
       return jsonResponse({ error: 'Faltan datos: email, password, nombre' }, 400)
+    }
+
+    const rolFinal = rol || 'cajero'
+    if (!ROLES_VALIDOS.includes(rolFinal)) {
+      return jsonResponse({ error: `Rol inválido: ${rolFinal}` }, 400)
     }
 
     const { data: creado, error: errorCrear } = await servicio.auth.admin.createUser({
@@ -73,7 +80,7 @@ Deno.serve(async (req) => {
       id: creado.user.id,
       nombre,
       email,
-      rol: 'cajero',
+      rol: rolFinal,
     })
 
     if (errorPerfil) {

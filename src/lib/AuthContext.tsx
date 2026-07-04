@@ -8,7 +8,7 @@ import {
 import type { Session } from '@supabase/supabase-js'
 import { supabase } from './supabase'
 
-export type Rol = 'admin' | 'cajero'
+export type Rol = 'super_admin' | 'admin' | 'cajero'
 
 export interface Profile {
   id: string

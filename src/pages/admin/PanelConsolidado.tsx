@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { hoyBogota, primerDiaMesBogota } from '../../lib/fecha'
+import { exportarExcel } from '../../lib/excel'
 import { PantallaMensaje } from '../../components/PantallaMensaje'
 import { RangoFechas } from '../../components/RangoFechas'
 import { KpiCard } from './KpiCard'
@@ -107,10 +108,42 @@ export function PanelConsolidado() {
     porNegocio.set(clave, actual)
   }
 
+  function exportar() {
+    const filasResumen = [
+      { Concepto: 'Venta total', Valor: totalVenta },
+      { Concepto: 'Efectivo', Valor: totalEfectivo },
+      { Concepto: 'QR', Valor: totalQr },
+      { Concepto: 'Nequi/Daviplata', Valor: totalNequi },
+      { Concepto: 'Datáfono', Valor: totalDatafono },
+      { Concepto: 'Crédito', Valor: totalCredito },
+    ]
+
+    const filasNegocios = Array.from(porNegocio.values()).map((n) => ({
+      Negocio: n.nombre,
+      'Venta total': n.totalVenta,
+      Gastos: n.totalGastos,
+      'Entregas (depósitos)': n.totalEntrega,
+      'Cierres registrados': n.numCierres,
+    }))
+
+    exportarExcel(`consolidado_${desde}_a_${hasta}`, [
+      { nombre: 'Resumen', filas: filasResumen },
+      { nombre: 'Por negocio', filas: filasNegocios },
+    ])
+  }
+
   return (
     <div className="space-y-6">
-      <div className="rounded-xl bg-white p-4 shadow-sm">
+      <div className="rounded-xl bg-white p-4 shadow-sm flex flex-wrap items-end justify-between gap-4">
         <RangoFechas desde={desde} hasta={hasta} onCambiarDesde={setDesde} onCambiarHasta={setHasta} />
+        <button
+          type="button"
+          onClick={exportar}
+          disabled={cierres.length === 0}
+          className="rounded-lg bg-violet-600 text-white text-sm font-medium px-4 py-2 hover:bg-violet-700 disabled:opacity-50"
+        >
+          Exportar a Excel
+        </button>
       </div>
 
       {estado === 'cargando' ? (
