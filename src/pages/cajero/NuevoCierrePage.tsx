@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../lib/AuthContext'
 import { hoyBogota } from '../../lib/fecha'
@@ -8,6 +8,7 @@ import { PantallaMensaje } from '../../components/PantallaMensaje'
 import { GastoRow } from './GastoRow'
 import { DetallePagos } from './DetallePagos'
 import { ResumenCierre } from './ResumenCierre'
+import { guardarBorrador, leerBorrador, borrarBorrador } from './borrador'
 import type { GastoLocal } from './types'
 
 interface NegocioAsignado {
@@ -69,6 +70,11 @@ export function NuevoCierrePage() {
   const [guardando, setGuardando] = useState(false)
   const [errorGuardado, setErrorGuardado] = useState<string | null>(null)
 
+  const [avisoRestaurado, setAvisoRestaurado] = useState(false)
+  const [mensajeBorrador, setMensajeBorrador] = useState<string | null>(null)
+  const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false)
+  const restauroBorrador = useRef(false)
+
   useEffect(() => {
     if (!supabase || !session) return
     let cancelado = false
@@ -124,6 +130,26 @@ export function NuevoCierrePage() {
         return
       }
 
+      const borrador = leerBorrador(negocioAsignado.id, hoy)
+      if (borrador) {
+        setVentaEfectivo(borrador.ventaEfectivo)
+        setVentaQr(borrador.ventaQr)
+        setVentaNequi(borrador.ventaNequi)
+        setVentaDatafono(borrador.ventaDatafono)
+        setVentaCredito(borrador.ventaCredito)
+        setDetalleQr(borrador.detalleQr)
+        setDetalleNequi(borrador.detalleNequi)
+        setMostrarDetalleQr(borrador.mostrarDetalleQr)
+        setMostrarDetalleNequi(borrador.mostrarDetalleNequi)
+        setDatafonoLiquidado(borrador.datafonoLiquidado)
+        setGastos(borrador.gastos.map((g) => ({ ...g, foto: null })))
+        setEfectivoContado(borrador.efectivoContado)
+        setRecibe(borrador.recibe)
+        setDetalleOtros(borrador.detalleOtros)
+        setAvisoRestaurado(true)
+      }
+
+      restauroBorrador.current = true
       setEstado('listo')
     }
 
@@ -132,6 +158,46 @@ export function NuevoCierrePage() {
       cancelado = true
     }
   }, [session, hoy])
+
+  // Autoguardado del borrador en el navegador (no en Supabase) mientras se llena el formulario.
+  useEffect(() => {
+    if (estado !== 'listo' || !negocio || !restauroBorrador.current) return
+
+    guardarBorrador(negocio.id, hoy, {
+      ventaEfectivo,
+      ventaQr,
+      ventaNequi,
+      ventaDatafono,
+      ventaCredito,
+      detalleQr,
+      detalleNequi,
+      mostrarDetalleQr,
+      mostrarDetalleNequi,
+      datafonoLiquidado,
+      gastos: gastos.map((g) => ({ id: g.id, categoria: g.categoria, valor: g.valor, nota: g.nota })),
+      efectivoContado,
+      recibe,
+      detalleOtros,
+    })
+  }, [
+    estado,
+    negocio,
+    hoy,
+    ventaEfectivo,
+    ventaQr,
+    ventaNequi,
+    ventaDatafono,
+    ventaCredito,
+    detalleQr,
+    detalleNequi,
+    mostrarDetalleQr,
+    mostrarDetalleNequi,
+    datafonoLiquidado,
+    gastos,
+    efectivoContado,
+    recibe,
+    detalleOtros,
+  ])
 
   const totalVenta = ventaEfectivo + ventaQr + ventaNequi + ventaDatafono + ventaCredito
   const totalGastos = gastos.reduce((sum, g) => sum + (g.valor || 0), 0)
@@ -146,6 +212,28 @@ export function NuevoCierrePage() {
       ...prev,
       { id: crypto.randomUUID(), categoria: CATEGORIAS_GASTO[0], valor: 0, nota: '', foto: null },
     ])
+  }
+
+  function guardarBorradorManual() {
+    if (!negocio) return
+    guardarBorrador(negocio.id, hoy, {
+      ventaEfectivo,
+      ventaQr,
+      ventaNequi,
+      ventaDatafono,
+      ventaCredito,
+      detalleQr,
+      detalleNequi,
+      mostrarDetalleQr,
+      mostrarDetalleNequi,
+      datafonoLiquidado,
+      gastos: gastos.map((g) => ({ id: g.id, categoria: g.categoria, valor: g.valor, nota: g.nota })),
+      efectivoContado,
+      recibe,
+      detalleOtros,
+    })
+    setMensajeBorrador('Borrador guardado ✓')
+    setTimeout(() => setMensajeBorrador(null), 2500)
   }
 
   async function guardarCierre() {
@@ -226,6 +314,8 @@ export function NuevoCierrePage() {
         }
       }
 
+      borrarBorrador(negocio.id, hoy)
+
       setCierreGuardado({
         base_efectivo: baseEfectivo,
         venta_efectivo: ventaEfectivo,
@@ -243,6 +333,7 @@ export function NuevoCierrePage() {
       setErrorGuardado(e instanceof Error ? e.message : 'Error desconocido al guardar.')
     } finally {
       setGuardando(false)
+      setMostrarConfirmacion(false)
     }
   }
 
@@ -281,6 +372,13 @@ export function NuevoCierrePage() {
           {hoy} — Base: {formatCOP(baseEfectivo)}
         </p>
       </div>
+
+      {avisoRestaurado && (
+        <div className="rounded-lg bg-yellow-50 text-yellow-700 text-sm font-medium px-4 py-3">
+          Se restauró un borrador guardado en este dispositivo. Si habías adjuntado fotos de
+          gastos, debes volver a seleccionarlas.
+        </div>
+      )}
 
       <section className="rounded-xl bg-white p-4 shadow-sm space-y-3">
         <h2 className="font-semibold text-gray-900">Ventas según sistema</h2>
@@ -424,14 +522,60 @@ export function NuevoCierrePage() {
         </div>
       )}
 
-      <button
-        type="button"
-        onClick={guardarCierre}
-        disabled={guardando}
-        className="w-full rounded-lg bg-violet-600 text-white font-medium py-3 hover:bg-violet-700 disabled:opacity-50"
-      >
-        {guardando ? 'Guardando...' : 'Guardar cierre'}
-      </button>
+      {mensajeBorrador && (
+        <div className="rounded-lg bg-green-50 text-green-700 text-sm font-medium px-4 py-3 text-center">
+          {mensajeBorrador}
+        </div>
+      )}
+
+      <div className="space-y-2">
+        <button
+          type="button"
+          onClick={guardarBorradorManual}
+          className="w-full rounded-lg border border-violet-600 text-violet-600 font-medium py-3 hover:bg-violet-50"
+        >
+          Guardar borrador
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setMostrarConfirmacion(true)}
+          disabled={guardando}
+          className="w-full rounded-lg bg-violet-600 text-white font-medium py-3 hover:bg-violet-700 disabled:opacity-50"
+        >
+          {guardando ? 'Guardando...' : 'Guardar cierre'}
+        </button>
+      </div>
+
+      {mostrarConfirmacion && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl shadow-lg max-w-sm w-full p-6 space-y-4 text-center">
+            <h2 className="font-semibold text-gray-900 text-lg">¿Confirmar cierre de caja?</h2>
+            <p className="text-sm text-gray-600">
+              ¿Está seguro que va a realizar el cierre de caja? Una vez que dé aceptar no se
+              podrán realizar cambios.
+            </p>
+            <div className="flex gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setMostrarConfirmacion(false)}
+                disabled={guardando}
+                className="flex-1 rounded-lg border border-gray-300 text-gray-600 font-medium py-2 hover:bg-gray-50 disabled:opacity-50"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={guardarCierre}
+                disabled={guardando}
+                className="flex-1 rounded-lg bg-violet-600 text-white font-medium py-2 hover:bg-violet-700 disabled:opacity-50"
+              >
+                {guardando ? 'Guardando...' : 'Sí, cerrar caja'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
