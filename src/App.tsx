@@ -12,6 +12,7 @@ import { CierresPage } from './pages/admin/CierresPage'
 import { AuditoriaPage } from './pages/admin/AuditoriaPage'
 import { UsuariosPage } from './pages/admin/UsuariosPage'
 import { TurnosPage } from './pages/admin/TurnosPage'
+import { NegociosPage } from './pages/admin/NegociosPage'
 
 function InicioRedirect() {
   const { profile } = useAuth()
@@ -38,6 +39,7 @@ function App() {
                 <Route element={<RequireRole roles={['super_admin']} />}>
                   <Route path="usuarios" element={<UsuariosPage />} />
                   <Route path="turnos" element={<TurnosPage />} />
+                  <Route path="negocios" element={<NegociosPage />} />
                 </Route>
               </Route>
             </Route>

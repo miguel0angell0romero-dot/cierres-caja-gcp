@@ -4,6 +4,7 @@ export interface NegocioResumen {
   codigo: string
   color: string
   base_efectivo: number
+  logo_path: string | null
 }
 
 export interface CierreCompleto {

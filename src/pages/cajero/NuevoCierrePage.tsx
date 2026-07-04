@@ -9,6 +9,7 @@ import { GastoRow } from './GastoRow'
 import { DetallePagos } from './DetallePagos'
 import { ResumenCierre } from './ResumenCierre'
 import { guardarBorrador, leerBorrador, borrarBorrador } from './borrador'
+import { urlLogoNegocio } from '../../lib/logo'
 import type { GastoLocal } from './types'
 
 interface NegocioAsignado {
@@ -16,6 +17,7 @@ interface NegocioAsignado {
   nombre: string
   codigo: string
   base_efectivo: number
+  logo_path: string | null
 }
 
 interface GastoGuardado {
@@ -84,7 +86,7 @@ export function NuevoCierrePage() {
 
       const { data: asignacion, error: asgError } = await supabase
         .from('asignaciones')
-        .select('negocio_id, negocios (id, nombre, codigo, base_efectivo)')
+        .select('negocio_id, negocios (id, nombre, codigo, base_efectivo, logo_path)')
         .eq('profile_id', session.user.id)
         .eq('fecha', hoy)
         .maybeSingle()
@@ -366,11 +368,20 @@ export function NuevoCierrePage() {
 
   return (
     <div className="max-w-md mx-auto space-y-4 pb-8">
-      <div className="rounded-xl bg-white p-4 shadow-sm">
-        <p className="font-semibold text-gray-900">{negocio?.nombre}</p>
-        <p className="text-sm text-gray-500">
-          {hoy} — Base: {formatCOP(baseEfectivo)}
-        </p>
+      <div className="rounded-xl bg-white p-4 shadow-sm flex items-center gap-3">
+        {urlLogoNegocio(negocio?.logo_path ?? null) && (
+          <img
+            src={urlLogoNegocio(negocio?.logo_path ?? null)!}
+            alt={negocio?.nombre}
+            className="h-12 w-12 rounded-lg object-cover"
+          />
+        )}
+        <div>
+          <p className="font-semibold text-gray-900">{negocio?.nombre}</p>
+          <p className="text-sm text-gray-500">
+            {hoy} — Base: {formatCOP(baseEfectivo)}
+          </p>
+        </div>
       </div>
 
       {avisoRestaurado && (

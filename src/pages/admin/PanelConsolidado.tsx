@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { hoyBogota, primerDiaMesBogota } from '../../lib/fecha'
 import { exportarExcel } from '../../lib/excel'
+import { urlLogoNegocio } from '../../lib/logo'
 import { PantallaMensaje } from '../../components/PantallaMensaje'
 import { RangoFechas } from '../../components/RangoFechas'
 import { KpiCard } from './KpiCard'
@@ -17,7 +18,7 @@ interface CierreFila {
   venta_credito: number
   base_efectivo: number
   efectivo_contado: number
-  negocios: { nombre: string; codigo: string; color: string } | null
+  negocios: { nombre: string; codigo: string; color: string; logo_path: string | null } | null
   gastos: { valor: number }[]
 }
 
@@ -41,7 +42,7 @@ export function PanelConsolidado() {
       const { data, error: err } = await supabase
         .from('cierres')
         .select(
-          'negocio_id, venta_efectivo, venta_qr, venta_nequi, venta_datafono, venta_credito, base_efectivo, efectivo_contado, negocios(nombre, codigo, color), gastos(valor)'
+          'negocio_id, venta_efectivo, venta_qr, venta_nequi, venta_datafono, venta_credito, base_efectivo, efectivo_contado, negocios(nombre, codigo, color, logo_path), gastos(valor)'
         )
         .gte('fecha', desde)
         .lte('fecha', hasta)
@@ -86,16 +87,26 @@ export function PanelConsolidado() {
 
   const porNegocio = new Map<
     string,
-    { nombre: string; color: string; totalVenta: number; totalGastos: number; totalEntrega: number; numCierres: number }
+    {
+      nombre: string
+      color: string
+      logoUrl: string | null
+      totalVenta: number
+      totalGastos: number
+      totalEntrega: number
+      numCierres: number
+    }
   >()
 
   for (const c of cierres) {
     const nombre = c.negocios?.nombre ?? 'Sin negocio'
     const color = c.negocios?.color ?? '#6E4AD1'
+    const logoUrl = urlLogoNegocio(c.negocios?.logo_path ?? null)
     const clave = c.negocio_id
     const actual = porNegocio.get(clave) ?? {
       nombre,
       color,
+      logoUrl,
       totalVenta: 0,
       totalGastos: 0,
       totalEntrega: 0,
@@ -167,6 +178,7 @@ export function PanelConsolidado() {
                 key={id}
                 nombre={n.nombre}
                 color={n.color}
+                logoUrl={n.logoUrl}
                 totalVenta={n.totalVenta}
                 totalGastos={n.totalGastos}
                 totalEntrega={n.totalEntrega}

@@ -3,6 +3,7 @@ import { formatCOP } from '../../lib/money'
 export function TarjetaNegocio({
   nombre,
   color,
+  logoUrl,
   totalVenta,
   totalGastos,
   totalEntrega,
@@ -10,6 +11,7 @@ export function TarjetaNegocio({
 }: {
   nombre: string
   color: string
+  logoUrl: string | null
   totalVenta: number
   totalGastos: number
   totalEntrega: number
@@ -18,7 +20,11 @@ export function TarjetaNegocio({
   return (
     <div className="rounded-xl bg-white p-4 shadow-sm space-y-2">
       <div className="flex items-center gap-2">
-        <span className="h-3 w-3 rounded-full" style={{ backgroundColor: color }} />
+        {logoUrl ? (
+          <img src={logoUrl} alt={nombre} className="h-6 w-6 rounded object-cover" />
+        ) : (
+          <span className="h-3 w-3 rounded-full" style={{ backgroundColor: color }} />
+        )}
         <h3 className="font-semibold text-gray-900">{nombre}</h3>
       </div>
       <Fila label="Venta total" valor={formatCOP(totalVenta)} />

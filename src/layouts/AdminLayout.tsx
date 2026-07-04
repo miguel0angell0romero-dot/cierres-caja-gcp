@@ -9,6 +9,7 @@ const enlaces = [
   { to: '/admin/auditoria', label: 'Auditoría', end: false, soloSuperAdmin: false },
   { to: '/admin/usuarios', label: 'Usuarios', end: false, soloSuperAdmin: true },
   { to: '/admin/turnos', label: 'Turnos', end: false, soloSuperAdmin: true },
+  { to: '/admin/negocios', label: 'Negocios', end: false, soloSuperAdmin: true },
 ]
 
 export function AdminLayout() {

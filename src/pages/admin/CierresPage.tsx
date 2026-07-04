@@ -34,7 +34,7 @@ export function CierresPage() {
     if (!supabase) return
     supabase
       .from('negocios')
-      .select('id, nombre, codigo, color, base_efectivo')
+      .select('id, nombre, codigo, color, base_efectivo, logo_path')
       .order('nombre')
       .then(({ data }) => setNegocios((data ?? []) as NegocioResumen[]))
 
