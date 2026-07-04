@@ -5,3 +5,9 @@ export interface GastoLocal {
   nota: string
   foto: File | null
 }
+
+export interface PropinaLocal {
+  id: string
+  valor: number
+  nota: string
+}

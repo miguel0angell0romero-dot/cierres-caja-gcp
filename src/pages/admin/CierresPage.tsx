@@ -53,7 +53,7 @@ export function CierresPage() {
 
     let query = supabase
       .from('cierres')
-      .select('*, negocios(nombre, codigo), profiles(nombre), gastos(valor)')
+      .select('*, negocios(nombre, codigo), profiles(nombre), gastos(valor), propinas(valor)')
       .gte('fecha', desde)
       .lte('fecha', hasta)
       .order('fecha', { ascending: false })
@@ -82,7 +82,8 @@ export function CierresPage() {
   function exportar() {
     const filas = cierres.map((c) => {
       const totalGastos = c.gastos.reduce((s, g) => s + g.valor, 0)
-      const esperado = c.base_efectivo + c.venta_efectivo - totalGastos
+      const totalPropinas = c.propinas.reduce((s, p) => s + p.valor, 0)
+      const esperado = c.base_efectivo + c.venta_efectivo - totalGastos - totalPropinas
       return {
         Fecha: c.fecha,
         Negocio: c.negocios?.nombre ?? '',
@@ -98,6 +99,7 @@ export function CierresPage() {
         'Datáfono liquidado': c.datafono_liquidado,
         'Diferencia datáfono': c.datafono_liquidado - c.venta_datafono,
         Gastos: totalGastos,
+        Propinas: totalPropinas,
         Esperado: esperado,
         'Efectivo contado': c.efectivo_contado,
         Diferencia: c.efectivo_contado - esperado,
@@ -209,6 +211,7 @@ export function CierresPage() {
         <EditarCierreModal
           cierre={cierreEditando}
           totalGastos={cierreEditando.gastos.reduce((s, g) => s + g.valor, 0)}
+          totalPropinas={cierreEditando.propinas.reduce((s, p) => s + p.valor, 0)}
           onCerrar={() => setCierreEditando(null)}
           onGuardado={() => {
             setCierreEditando(null)

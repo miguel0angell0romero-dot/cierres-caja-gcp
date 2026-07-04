@@ -6,12 +6,13 @@ import { formatCOP } from '../../lib/money'
 import { CATEGORIAS_GASTO } from '../../lib/constantes'
 import { PantallaMensaje } from '../../components/PantallaMensaje'
 import { GastoRow } from './GastoRow'
+import { PropinaRow } from './PropinaRow'
 import { DetallePagos } from './DetallePagos'
 import { ResumenCierre } from './ResumenCierre'
 import { guardarBorrador, leerBorrador, borrarBorrador } from './borrador'
 import { urlLogoNegocio } from '../../lib/logo'
 import { comprimirImagen } from '../../lib/imagen'
-import type { GastoLocal } from './types'
+import type { GastoLocal, PropinaLocal } from './types'
 
 interface NegocioAsignado {
   id: string
@@ -27,6 +28,11 @@ interface GastoGuardado {
   nota: string | null
 }
 
+interface PropinaGuardada {
+  valor: number
+  nota: string | null
+}
+
 interface CierreGuardado {
   base_efectivo: number
   venta_efectivo: number
@@ -38,6 +44,7 @@ interface CierreGuardado {
   efectivo_contado: number
   recibe: string | null
   gastos: GastoGuardado[]
+  propinas: PropinaGuardada[]
 }
 
 type Estado = 'cargando' | 'sin-asignacion' | 'ya-guardado' | 'listo' | 'error'
@@ -67,6 +74,7 @@ export function NuevoCierrePage() {
   const [mostrarDetalleNequi, setMostrarDetalleNequi] = useState(false)
   const [datafonoLiquidado, setDatafonoLiquidado] = useState(0)
   const [gastos, setGastos] = useState<GastoLocal[]>([])
+  const [propinas, setPropinas] = useState<PropinaLocal[]>([])
   const [efectivoContado, setEfectivoContado] = useState(0)
   const [recibe, setRecibe] = useState('')
   const [detalleOtros, setDetalleOtros] = useState('')
@@ -113,7 +121,7 @@ export function NuevoCierrePage() {
 
       const { data: cierreExistente, error: cierreError } = await supabase
         .from('cierres')
-        .select('*, gastos(categoria, valor, nota)')
+        .select('*, gastos(categoria, valor, nota), propinas(valor, nota)')
         .eq('negocio_id', negocioAsignado.id)
         .eq('profile_id', session.user.id)
         .eq('fecha', hoy)
@@ -146,6 +154,7 @@ export function NuevoCierrePage() {
         setMostrarDetalleNequi(borrador.mostrarDetalleNequi)
         setDatafonoLiquidado(borrador.datafonoLiquidado)
         setGastos(borrador.gastos.map((g) => ({ ...g, foto: null })))
+        setPropinas(borrador.propinas ?? [])
         setEfectivoContado(borrador.efectivoContado)
         setRecibe(borrador.recibe)
         setDetalleOtros(borrador.detalleOtros)
@@ -178,6 +187,7 @@ export function NuevoCierrePage() {
       mostrarDetalleNequi,
       datafonoLiquidado,
       gastos: gastos.map((g) => ({ id: g.id, categoria: g.categoria, valor: g.valor, nota: g.nota })),
+      propinas: propinas.map((p) => ({ id: p.id, valor: p.valor, nota: p.nota })),
       efectivoContado,
       recibe,
       detalleOtros,
@@ -197,6 +207,7 @@ export function NuevoCierrePage() {
     mostrarDetalleNequi,
     datafonoLiquidado,
     gastos,
+    propinas,
     efectivoContado,
     recibe,
     detalleOtros,
@@ -204,8 +215,9 @@ export function NuevoCierrePage() {
 
   const totalVenta = ventaEfectivo + ventaQr + ventaNequi + ventaDatafono + ventaCredito
   const totalGastos = gastos.reduce((sum, g) => sum + (g.valor || 0), 0)
+  const totalPropinas = propinas.reduce((sum, p) => sum + (p.valor || 0), 0)
   const baseEfectivo = negocio?.base_efectivo ?? 0
-  const esperado = baseEfectivo + ventaEfectivo - totalGastos
+  const esperado = baseEfectivo + ventaEfectivo - totalGastos - totalPropinas
   const diferencia = efectivoContado - esperado
   const entrega = efectivoContado - baseEfectivo
   const diferenciaDatafono = datafonoLiquidado - ventaDatafono
@@ -215,6 +227,10 @@ export function NuevoCierrePage() {
       ...prev,
       { id: crypto.randomUUID(), categoria: CATEGORIAS_GASTO[0], valor: 0, nota: '', foto: null },
     ])
+  }
+
+  function agregarPropina() {
+    setPropinas((prev) => [...prev, { id: crypto.randomUUID(), valor: 0, nota: '' }])
   }
 
   function guardarBorradorManual() {
@@ -231,6 +247,7 @@ export function NuevoCierrePage() {
       mostrarDetalleNequi,
       datafonoLiquidado,
       gastos: gastos.map((g) => ({ id: g.id, categoria: g.categoria, valor: g.valor, nota: g.nota })),
+      propinas: propinas.map((p) => ({ id: p.id, valor: p.valor, nota: p.nota })),
       efectivoContado,
       recibe,
       detalleOtros,
@@ -306,6 +323,25 @@ export function NuevoCierrePage() {
         gastosGuardados.push({ categoria: gasto.categoria, valor: gasto.valor, nota: gasto.nota || null })
       }
 
+      const propinasGuardadas: PropinaGuardada[] = []
+
+      if (propinas.length > 0) {
+        const { error: propinasError } = await supabase.from('propinas').insert(
+          propinas.map((p) => ({
+            id: p.id,
+            cierre_id: cierreId,
+            valor: p.valor,
+            nota: p.nota || null,
+          }))
+        )
+
+        if (propinasError) {
+          throw new Error(`Cierre guardado, pero falló una propina: ${propinasError.message}`)
+        }
+
+        propinasGuardadas.push(...propinas.map((p) => ({ valor: p.valor, nota: p.nota || null })))
+      }
+
       const pagos = [
         ...detalleQr.map((valor) => ({ cierre_id: cierreId, metodo: 'qr', valor })),
         ...detalleNequi.map((valor) => ({ cierre_id: cierreId, metodo: 'nequi', valor })),
@@ -331,6 +367,7 @@ export function NuevoCierrePage() {
         efectivo_contado: efectivoContado,
         recibe: recibe || null,
         gastos: gastosGuardados,
+        propinas: propinasGuardadas,
       })
       setEstado('ya-guardado')
     } catch (e) {
@@ -364,6 +401,7 @@ export function NuevoCierrePage() {
         fecha={hoy}
         cierre={cierreGuardado}
         gastos={cierreGuardado.gastos}
+        propinas={cierreGuardado.propinas}
       />
     )
   }
@@ -476,6 +514,39 @@ export function NuevoCierrePage() {
       </section>
 
       <section className="rounded-xl bg-white p-4 shadow-sm space-y-3">
+        <div className="flex items-center justify-between">
+          <h2 className="font-semibold text-gray-900">Propinas</h2>
+          <button
+            type="button"
+            onClick={agregarPropina}
+            className="text-sm font-medium text-violet-600 hover:text-violet-800"
+          >
+            + Agregar propina
+          </button>
+        </div>
+        <p className="text-xs text-gray-400 -mt-2">
+          Se cobran junto con la cuenta y se entregan en efectivo al mesero: se descuentan del
+          efectivo esperado.
+        </p>
+
+        {propinas.map((p) => (
+          <PropinaRow
+            key={p.id}
+            propina={p}
+            onCambiar={(actualizada) =>
+              setPropinas((prev) => prev.map((x) => (x.id === p.id ? actualizada : x)))
+            }
+            onQuitar={() => setPropinas((prev) => prev.filter((x) => x.id !== p.id))}
+          />
+        ))}
+
+        <div className="flex justify-between pt-2 border-t border-gray-100 font-semibold text-gray-900">
+          <span>Total propinas</span>
+          <span>{formatCOP(totalPropinas)}</span>
+        </div>
+      </section>
+
+      <section className="rounded-xl bg-white p-4 shadow-sm space-y-3">
         <h2 className="font-semibold text-gray-900">Cuadre de efectivo</h2>
 
         <div className="flex justify-between text-sm">
@@ -489,6 +560,10 @@ export function NuevoCierrePage() {
         <div className="flex justify-between text-sm">
           <span className="text-gray-500">Gastos</span>
           <span>- {formatCOP(totalGastos)}</span>
+        </div>
+        <div className="flex justify-between text-sm">
+          <span className="text-gray-500">Propinas</span>
+          <span>- {formatCOP(totalPropinas)}</span>
         </div>
         <div className="flex justify-between font-semibold text-gray-900 pt-1 border-t border-gray-100">
           <span>Esperado</span>

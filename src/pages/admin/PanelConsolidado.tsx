@@ -20,6 +20,7 @@ interface CierreFila {
   efectivo_contado: number
   negocios: { nombre: string; codigo: string; color: string; logo_path: string | null } | null
   gastos: { valor: number }[]
+  propinas: { valor: number }[]
 }
 
 type Estado = 'cargando' | 'listo' | 'error'
@@ -42,7 +43,7 @@ export function PanelConsolidado() {
       const { data, error: err } = await supabase
         .from('cierres')
         .select(
-          'negocio_id, venta_efectivo, venta_qr, venta_nequi, venta_datafono, venta_credito, base_efectivo, efectivo_contado, negocios(nombre, codigo, color, logo_path), gastos(valor)'
+          'negocio_id, venta_efectivo, venta_qr, venta_nequi, venta_datafono, venta_credito, base_efectivo, efectivo_contado, negocios(nombre, codigo, color, logo_path), gastos(valor), propinas(valor)'
         )
         .gte('fecha', desde)
         .lte('fecha', hasta)
@@ -93,6 +94,7 @@ export function PanelConsolidado() {
       logoUrl: string | null
       totalVenta: number
       totalGastos: number
+      totalPropinas: number
       totalEntrega: number
       numCierres: number
     }
@@ -109,11 +111,13 @@ export function PanelConsolidado() {
       logoUrl,
       totalVenta: 0,
       totalGastos: 0,
+      totalPropinas: 0,
       totalEntrega: 0,
       numCierres: 0,
     }
     actual.totalVenta += c.venta_efectivo + c.venta_qr + c.venta_nequi + c.venta_datafono + c.venta_credito
     actual.totalGastos += c.gastos.reduce((s, g) => s + g.valor, 0)
+    actual.totalPropinas += c.propinas.reduce((s, p) => s + p.valor, 0)
     actual.totalEntrega += c.efectivo_contado - c.base_efectivo
     actual.numCierres += 1
     porNegocio.set(clave, actual)
@@ -133,6 +137,7 @@ export function PanelConsolidado() {
       Negocio: n.nombre,
       'Venta total': n.totalVenta,
       Gastos: n.totalGastos,
+      Propinas: n.totalPropinas,
       'Entregas (depósitos)': n.totalEntrega,
       'Cierres registrados': n.numCierres,
     }))
@@ -181,6 +186,7 @@ export function PanelConsolidado() {
                 logoUrl={n.logoUrl}
                 totalVenta={n.totalVenta}
                 totalGastos={n.totalGastos}
+                totalPropinas={n.totalPropinas}
                 totalEntrega={n.totalEntrega}
                 numCierres={n.numCierres}
               />

@@ -34,11 +34,13 @@ function aFormulario(cierre: CierreCompleto): ValoresForm {
 export function EditarCierreModal({
   cierre,
   totalGastos,
+  totalPropinas,
   onCerrar,
   onGuardado,
 }: {
   cierre: CierreCompleto
   totalGastos: number
+  totalPropinas: number
   onCerrar: () => void
   onGuardado: () => void
 }) {
@@ -62,7 +64,7 @@ export function EditarCierreModal({
   const efectivoContado = numero('efectivo_contado')
 
   const totalVenta = ventaEfectivo + ventaQr + ventaNequi + ventaDatafono + ventaCredito
-  const esperado = baseEfectivo + ventaEfectivo - totalGastos
+  const esperado = baseEfectivo + ventaEfectivo - totalGastos - totalPropinas
   const diferencia = efectivoContado - esperado
   const entrega = efectivoContado - baseEfectivo
   const diferenciaDatafono = datafonoLiquidado - ventaDatafono
@@ -159,6 +161,10 @@ export function EditarCierreModal({
           <div className="flex justify-between">
             <span className="text-gray-500">Gastos (no editables aquí)</span>
             <span>{formatCOP(totalGastos)}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-gray-500">Propinas (no editables aquí)</span>
+            <span>{formatCOP(totalPropinas)}</span>
           </div>
           <div className="flex justify-between font-medium">
             <span>Esperado</span>

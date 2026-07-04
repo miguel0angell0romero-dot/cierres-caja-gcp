@@ -18,6 +18,11 @@ interface GastoResumenData {
   nota: string | null
 }
 
+interface PropinaResumenData {
+  valor: number
+  nota: string | null
+}
+
 function Fila({ label, valor, resaltado }: { label: string; valor: string; resaltado?: boolean }) {
   return (
     <div className="flex justify-between text-sm py-1">
@@ -32,11 +37,13 @@ export function ResumenCierre({
   fecha,
   cierre,
   gastos,
+  propinas,
 }: {
   negocioNombre: string
   fecha: string
   cierre: CierreResumenData
   gastos: GastoResumenData[]
+  propinas: PropinaResumenData[]
 }) {
   const totalVenta =
     cierre.venta_efectivo +
@@ -45,7 +52,8 @@ export function ResumenCierre({
     cierre.venta_datafono +
     cierre.venta_credito
   const totalGastos = gastos.reduce((sum, g) => sum + g.valor, 0)
-  const esperado = cierre.base_efectivo + cierre.venta_efectivo - totalGastos
+  const totalPropinas = propinas.reduce((sum, p) => sum + p.valor, 0)
+  const esperado = cierre.base_efectivo + cierre.venta_efectivo - totalGastos - totalPropinas
   const diferencia = cierre.efectivo_contado - esperado
   const entrega = cierre.efectivo_contado - cierre.base_efectivo
   const diferenciaDatafono = cierre.datafono_liquidado - cierre.venta_datafono
@@ -87,11 +95,22 @@ export function ResumenCierre({
         </section>
       )}
 
+      {propinas.length > 0 && (
+        <section className="rounded-xl bg-white p-4 shadow-sm space-y-1">
+          <h2 className="font-semibold text-gray-900 mb-1">Propinas (entregadas al mesero)</h2>
+          {propinas.map((p, i) => (
+            <Fila key={i} label={p.nota || `Propina ${i + 1}`} valor={formatCOP(p.valor)} />
+          ))}
+          <Fila label="Total propinas" valor={formatCOP(totalPropinas)} resaltado />
+        </section>
+      )}
+
       <section className="rounded-xl bg-white p-4 shadow-sm space-y-1">
         <h2 className="font-semibold text-gray-900 mb-1">Cuadre de efectivo</h2>
         <Fila label="Base" valor={formatCOP(cierre.base_efectivo)} />
         <Fila label="Ventas efectivo" valor={formatCOP(cierre.venta_efectivo)} />
         <Fila label="Gastos" valor={`- ${formatCOP(totalGastos)}`} />
+        <Fila label="Propinas" valor={`- ${formatCOP(totalPropinas)}`} />
         <Fila label="Esperado" valor={formatCOP(esperado)} resaltado />
         <Fila label="Contado" valor={formatCOP(cierre.efectivo_contado)} />
         <Fila

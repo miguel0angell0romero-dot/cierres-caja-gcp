@@ -25,6 +25,7 @@ export interface CierreCompleto {
   negocios: { nombre: string; codigo: string } | null
   profiles: { nombre: string } | null
   gastos: { valor: number }[]
+  propinas: { valor: number }[]
 }
 
 export const CAMPOS_EDITABLES = [

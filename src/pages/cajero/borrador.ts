@@ -5,6 +5,12 @@ export interface BorradorGasto {
   nota: string
 }
 
+export interface BorradorPropina {
+  id: string
+  valor: number
+  nota: string
+}
+
 export interface BorradorCierre {
   ventaEfectivo: number
   ventaQr: number
@@ -17,6 +23,7 @@ export interface BorradorCierre {
   mostrarDetalleNequi: boolean
   datafonoLiquidado: number
   gastos: BorradorGasto[]
+  propinas?: BorradorPropina[]
   efectivoContado: number
   recibe: string
   detalleOtros: string

@@ -6,6 +6,7 @@ export function TarjetaNegocio({
   logoUrl,
   totalVenta,
   totalGastos,
+  totalPropinas,
   totalEntrega,
   numCierres,
 }: {
@@ -14,6 +15,7 @@ export function TarjetaNegocio({
   logoUrl: string | null
   totalVenta: number
   totalGastos: number
+  totalPropinas: number
   totalEntrega: number
   numCierres: number
 }) {
@@ -29,6 +31,7 @@ export function TarjetaNegocio({
       </div>
       <Fila label="Venta total" valor={formatCOP(totalVenta)} />
       <Fila label="Gastos" valor={formatCOP(totalGastos)} />
+      <Fila label="Propinas" valor={formatCOP(totalPropinas)} />
       <Fila label="Entregas (depósitos)" valor={formatCOP(totalEntrega)} />
       <Fila label="Cierres registrados" valor={String(numCierres)} />
     </div>
