@@ -3,33 +3,14 @@ import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../lib/AuthContext'
 import { formatCOP } from '../../lib/money'
 import { hoyBogota } from '../../lib/fecha'
+import { guardarCierreCompleto } from '../../lib/guardarCierre'
+import { FormularioCierre } from '../../components/cierre/FormularioCierre'
+import type { DatosCierreFormulario } from '../../components/cierre/types'
 import type { NegocioResumen } from './types'
 
 interface CajeroOpcion {
   id: string
   nombre: string
-}
-
-const CAMPOS_NUMERICOS = [
-  'base_efectivo',
-  'venta_efectivo',
-  'venta_qr',
-  'venta_nequi',
-  'venta_datafono',
-  'venta_credito',
-  'datafono_liquidado',
-  'efectivo_contado',
-] as const
-
-const ETIQUETAS: Record<(typeof CAMPOS_NUMERICOS)[number], string> = {
-  base_efectivo: 'Base efectivo',
-  venta_efectivo: 'Venta efectivo',
-  venta_qr: 'Venta QR',
-  venta_nequi: 'Venta Nequi/Daviplata',
-  venta_datafono: 'Venta datáfono (sistema)',
-  venta_credito: 'Venta crédito',
-  datafono_liquidado: 'Datáfono liquidado (terminal)',
-  efectivo_contado: 'Efectivo contado',
 }
 
 export function CargarCierreModal({
@@ -47,83 +28,54 @@ export function CargarCierreModal({
   const [negocioId, setNegocioId] = useState(negocios[0]?.id ?? '')
   const [cajeroId, setCajeroId] = useState(cajeros[0]?.id ?? '')
   const [fecha, setFecha] = useState(hoyBogota())
-  const [valores, setValores] = useState<Record<string, string>>({})
-  const [detalleOtros, setDetalleOtros] = useState('')
-  const [recibe, setRecibe] = useState('')
   const [motivo, setMotivo] = useState('')
   const [guardando, setGuardando] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [errorMotivo, setErrorMotivo] = useState<string | null>(null)
+  const [errorGuardado, setErrorGuardado] = useState<string | null>(null)
 
-  function numero(campo: string) {
-    return Number(valores[campo]) || 0
-  }
+  const negocio = negocios.find((n) => n.id === negocioId)
+  const baseEfectivo = negocio?.base_efectivo ?? 0
 
-  const baseEfectivo = numero('base_efectivo')
-  const ventaEfectivo = numero('venta_efectivo')
-  const ventaQr = numero('venta_qr')
-  const ventaNequi = numero('venta_nequi')
-  const ventaDatafono = numero('venta_datafono')
-  const ventaCredito = numero('venta_credito')
-  const datafonoLiquidado = numero('datafono_liquidado')
-  const efectivoContado = numero('efectivo_contado')
-
-  const totalVenta = ventaEfectivo + ventaQr + ventaNequi + ventaDatafono + ventaCredito
-  const esperado = baseEfectivo + ventaEfectivo
-  const diferencia = efectivoContado - esperado
-  const entrega = efectivoContado - baseEfectivo
-  const diferenciaDatafono = datafonoLiquidado - ventaDatafono
-
-  async function guardar() {
+  async function guardar(datos: DatosCierreFormulario) {
     if (!supabase || !profile || !negocioId || !cajeroId) return
 
+    setErrorMotivo(null)
+    setErrorGuardado(null)
+
     if (!motivo.trim()) {
-      setError('El motivo es obligatorio.')
+      setErrorMotivo('El motivo es obligatorio.')
       return
     }
 
     setGuardando(true)
-    setError(null)
 
-    const cierreId = crypto.randomUUID()
-
-    const { error: err } = await supabase.from('cierres').insert({
-      id: cierreId,
-      negocio_id: negocioId,
-      profile_id: cajeroId,
+    const resultado = await guardarCierreCompleto({
+      negocioId,
+      profileId: cajeroId,
       fecha,
-      base_efectivo: baseEfectivo,
-      venta_efectivo: ventaEfectivo,
-      venta_qr: ventaQr,
-      venta_nequi: ventaNequi,
-      venta_datafono: ventaDatafono,
-      venta_credito: ventaCredito,
-      datafono_liquidado: datafonoLiquidado,
-      efectivo_contado: efectivoContado,
-      detalle_otros: detalleOtros || null,
-      recibe: recibe || null,
+      baseEfectivo,
+      datos,
     })
 
-    if (err) {
-      if (err.code === '23505') {
-        setError('Ya existe un cierre guardado para ese negocio en esa fecha.')
-      } else {
-        setError(err.message)
-      }
+    if ('error' in resultado) {
+      setErrorGuardado(resultado.error)
       setGuardando(false)
       return
     }
 
     const { error: auditoriaError } = await supabase.from('auditoria').insert({
-      cierre_id: cierreId,
+      cierre_id: resultado.cierreId,
       profile_id: profile.id,
       motivo: motivo.trim(),
-      cambios: [{ campo: 'Creación', antes: 'No existía', despues: 'Cierre cargado manualmente por un administrador' }],
+      cambios: [
+        { campo: 'Creación', antes: 'No existía', despues: 'Cierre cargado manualmente por un administrador' },
+      ],
     })
 
     setGuardando(false)
 
     if (auditoriaError) {
-      setError(`Cierre creado, pero falló el registro de auditoría: ${auditoriaError.message}`)
+      setErrorGuardado(`Cierre creado, pero falló el registro de auditoría: ${auditoriaError.message}`)
       return
     }
 
@@ -131,9 +83,12 @@ export function CargarCierreModal({
   }
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-xl shadow-lg max-w-lg w-full max-h-[90vh] overflow-y-auto p-6 space-y-4">
+    <div className="fixed inset-0 bg-black/40 flex items-start justify-center p-4 z-50 overflow-y-auto">
+      <div className="bg-white rounded-xl shadow-lg max-w-lg w-full my-8 p-6 space-y-4">
         <h2 className="font-semibold text-gray-900 text-lg">Cargar cierre anterior</h2>
+        <p className="text-sm text-gray-500 -mt-2">
+          Mismo formulario que usa el cajero, para poder registrar un cierre de una fecha pasada.
+        </p>
 
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1">
@@ -176,60 +131,9 @@ export function CargarCierreModal({
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
-          {CAMPOS_NUMERICOS.map((campo) => (
-            <div key={campo} className="space-y-1">
-              <label className="text-sm font-medium text-gray-700">{ETIQUETAS[campo]}</label>
-              <input
-                type="number"
-                min={0}
-                value={valores[campo] ?? ''}
-                onChange={(e) => setValores((prev) => ({ ...prev, [campo]: e.target.value }))}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
-              />
-            </div>
-          ))}
-          <div className="space-y-1">
-            <label className="text-sm font-medium text-gray-700">Recibe</label>
-            <input
-              type="text"
-              value={recibe}
-              onChange={(e) => setRecibe(e.target.value)}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
-            />
-          </div>
-          <div className="col-span-2 space-y-1">
-            <label className="text-sm font-medium text-gray-700">Notas adicionales</label>
-            <input
-              type="text"
-              value={detalleOtros}
-              onChange={(e) => setDetalleOtros(e.target.value)}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
-            />
-          </div>
-        </div>
-
-        <div className="rounded-lg bg-gray-50 p-3 space-y-1 text-sm">
-          <div className="flex justify-between">
-            <span className="text-gray-500">Total venta</span>
-            <span>{formatCOP(totalVenta)}</span>
-          </div>
-          <div className="flex justify-between font-medium">
-            <span>Esperado (sin gastos)</span>
-            <span>{formatCOP(esperado)}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-gray-500">{diferencia >= 0 ? 'Sobrante' : 'Faltante'}</span>
-            <span>{formatCOP(Math.abs(diferencia))}</span>
-          </div>
-          <div className="flex justify-between font-medium">
-            <span>Entrega</span>
-            <span>{formatCOP(entrega)}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-gray-500">Diferencia datáfono</span>
-            <span>{formatCOP(diferenciaDatafono)}</span>
-          </div>
+        <div className="rounded-lg bg-gray-50 px-3 py-2 text-sm flex justify-between">
+          <span className="text-gray-500">Base efectivo del negocio</span>
+          <span className="font-medium">{formatCOP(baseEfectivo)}</span>
         </div>
 
         <div className="space-y-1">
@@ -241,29 +145,26 @@ export function CargarCierreModal({
             placeholder="Ej: cierre de fecha X no registrado, se carga desde el registro en papel"
             className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
           />
+          {errorMotivo && (
+            <p className="text-sm font-medium text-red-600">{errorMotivo}</p>
+          )}
         </div>
 
-        {error && (
-          <div className="rounded-lg bg-red-50 text-red-700 text-sm font-medium px-3 py-2">{error}</div>
-        )}
+        <FormularioCierre
+          baseEfectivo={baseEfectivo}
+          onGuardar={guardar}
+          guardando={guardando}
+          textoBoton="Cargar cierre"
+          errorGuardado={errorGuardado}
+        />
 
-        <div className="flex justify-end gap-2 pt-2">
-          <button
-            type="button"
-            onClick={onCerrar}
-            className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900"
-          >
-            Cancelar
-          </button>
-          <button
-            type="button"
-            onClick={guardar}
-            disabled={guardando || !negocioId || !cajeroId}
-            className="px-4 py-2 rounded-lg bg-violet-600 text-white text-sm font-medium hover:bg-violet-700 disabled:opacity-50"
-          >
-            {guardando ? 'Guardando...' : 'Cargar cierre'}
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={onCerrar}
+          className="w-full text-sm font-medium text-gray-500 hover:text-gray-900 py-2"
+        >
+          Cancelar
+        </button>
       </div>
     </div>
   )
