@@ -1,4 +1,6 @@
+import { useRef, useState } from 'react'
 import { formatCOP } from '../../lib/money'
+import { compartirElementoComoImagen } from '../../lib/compartir'
 
 interface CierreResumenData {
   base_efectivo: number
@@ -45,6 +47,11 @@ export function ResumenCierre({
   gastos: GastoResumenData[]
   propinas: PropinaResumenData[]
 }) {
+  const contenidoRef = useRef<HTMLDivElement>(null)
+  const [compartiendo, setCompartiendo] = useState(false)
+  const [errorCompartir, setErrorCompartir] = useState<string | null>(null)
+  const [avisoDescarga, setAvisoDescarga] = useState(false)
+
   const totalVenta =
     cierre.venta_efectivo +
     cierre.venta_qr +
@@ -58,69 +65,114 @@ export function ResumenCierre({
   const entrega = cierre.efectivo_contado - cierre.base_efectivo
   const diferenciaDatafono = cierre.datafono_liquidado - cierre.venta_datafono
 
+  async function compartir() {
+    if (!contenidoRef.current) return
+    setCompartiendo(true)
+    setErrorCompartir(null)
+    setAvisoDescarga(false)
+
+    const resultado = await compartirElementoComoImagen(contenidoRef.current, {
+      nombreArchivo: `cierre-${negocioNombre}-${fecha}`.replace(/\s+/g, '-').toLowerCase(),
+      titulo: `Cierre de caja — ${negocioNombre}`,
+      texto: `Cierre de caja de ${negocioNombre} del ${fecha}`,
+    })
+
+    setCompartiendo(false)
+
+    if (resultado.error) {
+      setErrorCompartir(resultado.error)
+    } else if (!resultado.compartido) {
+      setAvisoDescarga(true)
+    }
+  }
+
   return (
     <div className="max-w-md mx-auto space-y-4">
-      <div className="rounded-xl bg-green-50 text-green-700 text-sm font-medium px-4 py-3 text-center">
-        Cierre guardado — {negocioNombre} — {fecha}
+      <div ref={contenidoRef} className="space-y-4 bg-gray-50">
+        <div className="rounded-xl bg-green-50 text-green-700 text-sm font-medium px-4 py-3 text-center">
+          Cierre guardado — {negocioNombre} — {fecha}
+        </div>
+
+        <section className="rounded-xl bg-white p-4 shadow-sm space-y-1">
+          <h2 className="font-semibold text-gray-900 mb-1">Ventas</h2>
+          <Fila label="Efectivo" valor={formatCOP(cierre.venta_efectivo)} />
+          <Fila label="QR" valor={formatCOP(cierre.venta_qr)} />
+          <Fila label="Nequi/Daviplata" valor={formatCOP(cierre.venta_nequi)} />
+          <Fila label="Datáfono" valor={formatCOP(cierre.venta_datafono)} />
+          <Fila label="Crédito" valor={formatCOP(cierre.venta_credito)} />
+          <Fila label="Total venta" valor={formatCOP(totalVenta)} resaltado />
+        </section>
+
+        <section className="rounded-xl bg-white p-4 shadow-sm space-y-1">
+          <h2 className="font-semibold text-gray-900 mb-1">Cuadre de datáfono</h2>
+          <Fila label="Datáfono liquidado" valor={formatCOP(cierre.datafono_liquidado)} />
+          <Fila label="Según sistema" valor={formatCOP(cierre.venta_datafono)} />
+          <Fila
+            label="Diferencia"
+            valor={formatCOP(diferenciaDatafono)}
+            resaltado
+          />
+        </section>
+
+        {gastos.length > 0 && (
+          <section className="rounded-xl bg-white p-4 shadow-sm space-y-1">
+            <h2 className="font-semibold text-gray-900 mb-1">Gastos en efectivo</h2>
+            {gastos.map((g, i) => (
+              <Fila key={i} label={g.categoria + (g.nota ? ` — ${g.nota}` : '')} valor={formatCOP(g.valor)} />
+            ))}
+            <Fila label="Total gastos" valor={formatCOP(totalGastos)} resaltado />
+          </section>
+        )}
+
+        {propinas.length > 0 && (
+          <section className="rounded-xl bg-white p-4 shadow-sm space-y-1">
+            <h2 className="font-semibold text-gray-900 mb-1">Propinas (entregadas al mesero)</h2>
+            {propinas.map((p, i) => (
+              <Fila key={i} label={p.nota || `Propina ${i + 1}`} valor={formatCOP(p.valor)} />
+            ))}
+            <Fila label="Total propinas" valor={formatCOP(totalPropinas)} resaltado />
+          </section>
+        )}
+
+        <section className="rounded-xl bg-white p-4 shadow-sm space-y-1">
+          <h2 className="font-semibold text-gray-900 mb-1">Cuadre de efectivo</h2>
+          <Fila label="Base" valor={formatCOP(cierre.base_efectivo)} />
+          <Fila label="Ventas efectivo" valor={formatCOP(cierre.venta_efectivo)} />
+          <Fila label="Gastos" valor={`- ${formatCOP(totalGastos)}`} />
+          <Fila label="Propinas" valor={`- ${formatCOP(totalPropinas)}`} />
+          <Fila label="Esperado" valor={formatCOP(esperado)} resaltado />
+          <Fila label="Contado" valor={formatCOP(cierre.efectivo_contado)} />
+          <Fila
+            label={diferencia >= 0 ? 'Sobrante' : 'Faltante'}
+            valor={formatCOP(Math.abs(diferencia))}
+            resaltado
+          />
+          <Fila label="Entrega" valor={formatCOP(entrega)} resaltado />
+          {cierre.recibe && <Fila label="Recibe" valor={cierre.recibe} />}
+        </section>
       </div>
 
-      <section className="rounded-xl bg-white p-4 shadow-sm space-y-1">
-        <h2 className="font-semibold text-gray-900 mb-1">Ventas</h2>
-        <Fila label="Efectivo" valor={formatCOP(cierre.venta_efectivo)} />
-        <Fila label="QR" valor={formatCOP(cierre.venta_qr)} />
-        <Fila label="Nequi/Daviplata" valor={formatCOP(cierre.venta_nequi)} />
-        <Fila label="Datáfono" valor={formatCOP(cierre.venta_datafono)} />
-        <Fila label="Crédito" valor={formatCOP(cierre.venta_credito)} />
-        <Fila label="Total venta" valor={formatCOP(totalVenta)} resaltado />
-      </section>
-
-      <section className="rounded-xl bg-white p-4 shadow-sm space-y-1">
-        <h2 className="font-semibold text-gray-900 mb-1">Cuadre de datáfono</h2>
-        <Fila label="Datáfono liquidado" valor={formatCOP(cierre.datafono_liquidado)} />
-        <Fila label="Según sistema" valor={formatCOP(cierre.venta_datafono)} />
-        <Fila
-          label="Diferencia"
-          valor={formatCOP(diferenciaDatafono)}
-          resaltado
-        />
-      </section>
-
-      {gastos.length > 0 && (
-        <section className="rounded-xl bg-white p-4 shadow-sm space-y-1">
-          <h2 className="font-semibold text-gray-900 mb-1">Gastos en efectivo</h2>
-          {gastos.map((g, i) => (
-            <Fila key={i} label={g.categoria + (g.nota ? ` — ${g.nota}` : '')} valor={formatCOP(g.valor)} />
-          ))}
-          <Fila label="Total gastos" valor={formatCOP(totalGastos)} resaltado />
-        </section>
+      {errorCompartir && (
+        <div className="rounded-lg bg-red-50 text-red-700 text-sm font-medium px-4 py-3">
+          No se pudo compartir: {errorCompartir}
+        </div>
       )}
 
-      {propinas.length > 0 && (
-        <section className="rounded-xl bg-white p-4 shadow-sm space-y-1">
-          <h2 className="font-semibold text-gray-900 mb-1">Propinas (entregadas al mesero)</h2>
-          {propinas.map((p, i) => (
-            <Fila key={i} label={p.nota || `Propina ${i + 1}`} valor={formatCOP(p.valor)} />
-          ))}
-          <Fila label="Total propinas" valor={formatCOP(totalPropinas)} resaltado />
-        </section>
+      {avisoDescarga && (
+        <div className="rounded-lg bg-yellow-50 text-yellow-700 text-sm font-medium px-4 py-3">
+          Tu navegador no permite compartir directo, así que se descargó la imagen del cierre —
+          envíala manualmente por WhatsApp.
+        </div>
       )}
 
-      <section className="rounded-xl bg-white p-4 shadow-sm space-y-1">
-        <h2 className="font-semibold text-gray-900 mb-1">Cuadre de efectivo</h2>
-        <Fila label="Base" valor={formatCOP(cierre.base_efectivo)} />
-        <Fila label="Ventas efectivo" valor={formatCOP(cierre.venta_efectivo)} />
-        <Fila label="Gastos" valor={`- ${formatCOP(totalGastos)}`} />
-        <Fila label="Propinas" valor={`- ${formatCOP(totalPropinas)}`} />
-        <Fila label="Esperado" valor={formatCOP(esperado)} resaltado />
-        <Fila label="Contado" valor={formatCOP(cierre.efectivo_contado)} />
-        <Fila
-          label={diferencia >= 0 ? 'Sobrante' : 'Faltante'}
-          valor={formatCOP(Math.abs(diferencia))}
-          resaltado
-        />
-        <Fila label="Entrega" valor={formatCOP(entrega)} resaltado />
-        {cierre.recibe && <Fila label="Recibe" valor={cierre.recibe} />}
-      </section>
+      <button
+        type="button"
+        onClick={compartir}
+        disabled={compartiendo}
+        className="w-full rounded-lg bg-green-600 text-white font-medium py-3 hover:bg-green-700 disabled:opacity-50"
+      >
+        {compartiendo ? 'Generando imagen...' : 'Compartir por WhatsApp'}
+      </button>
     </div>
   )
 }
