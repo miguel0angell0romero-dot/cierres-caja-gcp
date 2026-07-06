@@ -29,6 +29,9 @@ export function CierresPage() {
   const [error, setError] = useState<string | null>(null)
   const [cierreEditando, setCierreEditando] = useState<CierreCompleto | null>(null)
   const [mostrarCargarCierre, setMostrarCargarCierre] = useState(false)
+  const [cierreEliminando, setCierreEliminando] = useState<CierreCompleto | null>(null)
+  const [eliminando, setEliminando] = useState(false)
+  const [errorEliminar, setErrorEliminar] = useState<string | null>(null)
 
   useEffect(() => {
     if (!supabase) return
@@ -53,7 +56,9 @@ export function CierresPage() {
 
     let query = supabase
       .from('cierres')
-      .select('*, negocios(nombre, codigo), profiles(nombre), gastos(valor), propinas(valor)')
+      .select(
+        '*, negocios(nombre, codigo), profiles(nombre), gastos(id, categoria, valor, nota, foto_path), propinas(id, valor, nota)'
+      )
       .gte('fecha', desde)
       .lte('fecha', hasta)
       .order('fecha', { ascending: false })
@@ -110,6 +115,24 @@ export function CierresPage() {
     })
 
     exportarExcel(`cierres_${desde}_a_${hasta}`, [{ nombre: 'Cierres', filas }])
+  }
+
+  async function eliminarCierre() {
+    if (!supabase || !cierreEliminando) return
+    setEliminando(true)
+    setErrorEliminar(null)
+
+    const { error: err } = await supabase.from('cierres').delete().eq('id', cierreEliminando.id)
+
+    setEliminando(false)
+
+    if (err) {
+      setErrorEliminar(err.message)
+      return
+    }
+
+    setCierreEliminando(null)
+    cargarCierres()
   }
 
   if (error) {
@@ -189,13 +212,20 @@ export function CierresPage() {
                     <td className="px-4 py-3 text-right">{formatCOP(totalVenta)}</td>
                     <td className="px-4 py-3 text-right">{formatCOP(entrega)}</td>
                     {esSuperAdmin && (
-                      <td className="px-4 py-3 text-right">
+                      <td className="px-4 py-3 text-right space-x-3 whitespace-nowrap">
                         <button
                           type="button"
                           onClick={() => setCierreEditando(c)}
                           className="text-violet-600 font-medium hover:text-violet-800"
                         >
                           Editar
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setCierreEliminando(c)}
+                          className="text-red-600 font-medium hover:text-red-800"
+                        >
+                          Eliminar
                         </button>
                       </td>
                     )}
@@ -210,14 +240,52 @@ export function CierresPage() {
       {cierreEditando && (
         <EditarCierreModal
           cierre={cierreEditando}
-          totalGastos={cierreEditando.gastos.reduce((s, g) => s + g.valor, 0)}
-          totalPropinas={cierreEditando.propinas.reduce((s, p) => s + p.valor, 0)}
           onCerrar={() => setCierreEditando(null)}
           onGuardado={() => {
             setCierreEditando(null)
             cargarCierres()
           }}
         />
+      )}
+
+      {cierreEliminando && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl shadow-lg max-w-sm w-full p-6 space-y-4 text-center">
+            <h2 className="font-semibold text-gray-900 text-lg">¿Eliminar este cierre?</h2>
+            <p className="text-sm text-gray-600">
+              {cierreEliminando.negocios?.nombre} — {cierreEliminando.fecha}
+              <br />
+              Esta acción es permanente: se borran también sus gastos, propinas y detalle de
+              pagos, y no queda registro en auditoría. Úsalo solo para corregir cierres de
+              prueba o duplicados por error.
+            </p>
+
+            {errorEliminar && (
+              <div className="rounded-lg bg-red-50 text-red-700 text-sm font-medium px-3 py-2 text-left">
+                {errorEliminar}
+              </div>
+            )}
+
+            <div className="flex gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setCierreEliminando(null)}
+                disabled={eliminando}
+                className="flex-1 rounded-lg border border-gray-300 text-gray-600 font-medium py-2 hover:bg-gray-50 disabled:opacity-50"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={eliminarCierre}
+                disabled={eliminando}
+                className="flex-1 rounded-lg bg-red-600 text-white font-medium py-2 hover:bg-red-700 disabled:opacity-50"
+              >
+                {eliminando ? 'Eliminando...' : 'Sí, eliminar'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {mostrarCargarCierre && (

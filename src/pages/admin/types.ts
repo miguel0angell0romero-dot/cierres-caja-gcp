@@ -7,6 +7,20 @@ export interface NegocioResumen {
   logo_path: string | null
 }
 
+export interface GastoDetalle {
+  id: string
+  categoria: string
+  valor: number
+  nota: string | null
+  foto_path: string | null
+}
+
+export interface PropinaDetalle {
+  id: string
+  valor: number
+  nota: string | null
+}
+
 export interface CierreCompleto {
   id: string
   negocio_id: string
@@ -24,8 +38,8 @@ export interface CierreCompleto {
   recibe: string | null
   negocios: { nombre: string; codigo: string } | null
   profiles: { nombre: string } | null
-  gastos: { valor: number }[]
-  propinas: { valor: number }[]
+  gastos: GastoDetalle[]
+  propinas: PropinaDetalle[]
 }
 
 export const CAMPOS_EDITABLES = [
