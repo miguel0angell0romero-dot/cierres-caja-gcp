@@ -4,6 +4,7 @@ import { useAuth } from '../../lib/AuthContext'
 import { formatCOP } from '../../lib/money'
 import { hoyBogota } from '../../lib/fecha'
 import { PantallaMensaje } from '../../components/PantallaMensaje'
+import { GraficaPresupuesto } from './GraficaPresupuesto'
 
 interface Negocio {
   id: string
@@ -129,6 +130,14 @@ export function PresupuestoPage() {
   const totalPresupuesto = Object.values(presupuestos).reduce((s, v) => s + v, 0)
   const totalVentas = Object.values(ventasPorNegocio).reduce((s, v) => s + v, 0)
 
+  const datosGrafica = negocios.map((n) => ({
+    negocio: n.nombre,
+    presupuesto: presupuestos[n.id] ?? 0,
+    esperado: Math.round((presupuestos[n.id] ?? 0) * fraccionMes),
+    ventaReal: ventasPorNegocio[n.id] ?? 0,
+  }))
+  const hayDatosParaGrafica = datosGrafica.some((d) => d.presupuesto > 0 || d.ventaReal > 0)
+
   return (
     <div className="space-y-4">
       <div className="rounded-xl bg-white p-4 shadow-sm flex flex-wrap items-center gap-3">
@@ -157,6 +166,8 @@ export function PresupuestoPage() {
               esFuturo={esFuturo}
             />
           </div>
+
+          {hayDatosParaGrafica && <GraficaPresupuesto datos={datosGrafica} />}
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {negocios.map((n) => (
