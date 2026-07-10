@@ -7,6 +7,7 @@ const enlaces = [
   { to: '/admin', label: 'Panel', end: true, soloSuperAdmin: false },
   { to: '/admin/cierres', label: 'Cierres', end: false, soloSuperAdmin: false },
   { to: '/admin/auditoria', label: 'Auditoría', end: false, soloSuperAdmin: false },
+  { to: '/admin/presupuesto', label: 'Presupuesto', end: false, soloSuperAdmin: false },
   { to: '/admin/usuarios', label: 'Usuarios', end: false, soloSuperAdmin: true },
   { to: '/admin/turnos', label: 'Turnos', end: false, soloSuperAdmin: true },
   { to: '/admin/negocios', label: 'Negocios', end: false, soloSuperAdmin: true },

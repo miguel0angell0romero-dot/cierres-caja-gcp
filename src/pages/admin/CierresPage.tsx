@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../lib/AuthContext'
 import { formatCOP } from '../../lib/money'
@@ -32,6 +32,7 @@ export function CierresPage() {
   const [cierreEliminando, setCierreEliminando] = useState<CierreCompleto | null>(null)
   const [eliminando, setEliminando] = useState(false)
   const [errorEliminar, setErrorEliminar] = useState<string | null>(null)
+  const cargaIdRef = useRef(0)
 
   useEffect(() => {
     if (!supabase) return
@@ -51,6 +52,7 @@ export function CierresPage() {
 
   async function cargarCierres() {
     if (!supabase) return
+    const idActual = ++cargaIdRef.current
     setCargando(true)
     setError(null)
 
@@ -68,6 +70,11 @@ export function CierresPage() {
     }
 
     const { data, error: err } = await query
+
+    // Si mientras esperábamos la respuesta ya se disparó una carga más
+    // reciente (p. ej. cambiaron "Desde" y "Hasta" seguido), se ignora este
+    // resultado desactualizado para no pisar el de la consulta más nueva.
+    if (idActual !== cargaIdRef.current) return
 
     if (err) {
       setError(err.message)

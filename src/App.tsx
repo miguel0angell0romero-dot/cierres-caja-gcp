@@ -13,6 +13,7 @@ import { AuditoriaPage } from './pages/admin/AuditoriaPage'
 import { UsuariosPage } from './pages/admin/UsuariosPage'
 import { TurnosPage } from './pages/admin/TurnosPage'
 import { NegociosPage } from './pages/admin/NegociosPage'
+import { PresupuestoPage } from './pages/admin/PresupuestoPage'
 
 function InicioRedirect() {
   const { profile } = useAuth()
@@ -35,6 +36,7 @@ function App() {
                 <Route index element={<PanelConsolidado />} />
                 <Route path="cierres" element={<CierresPage />} />
                 <Route path="auditoria" element={<AuditoriaPage />} />
+                <Route path="presupuesto" element={<PresupuestoPage />} />
 
                 <Route element={<RequireRole roles={['super_admin']} />}>
                   <Route path="usuarios" element={<UsuariosPage />} />
