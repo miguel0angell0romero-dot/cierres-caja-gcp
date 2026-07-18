@@ -13,6 +13,10 @@ interface CajeroOpcion {
   nombre: string
 }
 
+const inputCls =
+  'w-full h-11 rounded-[14px] border-[1.5px] border-gray-200 bg-white px-3.5 text-sm text-gray-900 outline-none transition focus:border-violet-600 focus:ring-4 focus:ring-violet-100 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-50 dark:focus:ring-violet-500/20'
+const labelCls = 'mb-1.5 block text-[12.5px] font-semibold text-gray-500 dark:text-gray-400'
+
 export function CargarCierreModal({
   negocios,
   cajeros,
@@ -83,21 +87,17 @@ export function CargarCierreModal({
   }
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-start justify-center p-4 z-50 overflow-y-auto">
-      <div className="bg-white rounded-xl shadow-lg max-w-lg w-full my-8 p-6 space-y-4">
-        <h2 className="font-semibold text-gray-900 text-lg">Cargar cierre anterior</h2>
-        <p className="text-sm text-gray-500 -mt-2">
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-gray-900/50 p-4 backdrop-blur-sm">
+      <div className="animate-card-in my-8 w-full max-w-lg space-y-4 rounded-[20px] bg-white p-6 shadow-lg dark:bg-gray-800">
+        <h2 className="text-lg font-bold text-gray-900 dark:text-gray-50">Cargar cierre anterior</h2>
+        <p className="-mt-2 text-sm text-gray-500 dark:text-gray-400">
           Mismo formulario que usa el cajero, para poder registrar un cierre de una fecha pasada.
         </p>
 
-        <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-1">
-            <label className="text-sm font-medium text-gray-700">Negocio</label>
-            <select
-              value={negocioId}
-              onChange={(e) => setNegocioId(e.target.value)}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
-            >
+        <div className="grid grid-cols-2 gap-3.5">
+          <div>
+            <label className={labelCls}>Negocio</label>
+            <select value={negocioId} onChange={(e) => setNegocioId(e.target.value)} className={inputCls}>
               {negocios.map((n) => (
                 <option key={n.id} value={n.id}>
                   {n.nombre}
@@ -105,23 +105,19 @@ export function CargarCierreModal({
               ))}
             </select>
           </div>
-          <div className="space-y-1">
-            <label className="text-sm font-medium text-gray-700">Fecha</label>
+          <div>
+            <label className={labelCls}>Fecha</label>
             <input
               type="date"
               value={fecha}
               max={hoyBogota()}
               onChange={(e) => setFecha(e.target.value)}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+              className={inputCls}
             />
           </div>
-          <div className="col-span-2 space-y-1">
-            <label className="text-sm font-medium text-gray-700">Cajero (a nombre de quién)</label>
-            <select
-              value={cajeroId}
-              onChange={(e) => setCajeroId(e.target.value)}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
-            >
+          <div className="col-span-2">
+            <label className={labelCls}>Cajero (a nombre de quién)</label>
+            <select value={cajeroId} onChange={(e) => setCajeroId(e.target.value)} className={inputCls}>
               {cajeros.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.nombre}
@@ -131,22 +127,22 @@ export function CargarCierreModal({
           </div>
         </div>
 
-        <div className="rounded-lg bg-gray-50 px-3 py-2 text-sm flex justify-between">
-          <span className="text-gray-500">Base efectivo del negocio</span>
-          <span className="font-medium">{formatCOP(baseEfectivo)}</span>
+        <div className="flex justify-between rounded-[14px] bg-gray-50 px-3.5 py-2.5 text-sm dark:bg-gray-900/60">
+          <span className="text-gray-500 dark:text-gray-400">Base efectivo del negocio</span>
+          <span className="font-semibold text-gray-900 dark:text-gray-100">{formatCOP(baseEfectivo)}</span>
         </div>
 
-        <div className="space-y-1">
-          <label className="text-sm font-medium text-gray-700">Motivo de la carga manual (obligatorio)</label>
+        <div>
+          <label className={labelCls}>Motivo de la carga manual (obligatorio)</label>
           <textarea
             value={motivo}
             onChange={(e) => setMotivo(e.target.value)}
             rows={2}
             placeholder="Ej: cierre de fecha X no registrado, se carga desde el registro en papel"
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+            className="w-full rounded-[14px] border-[1.5px] border-gray-200 bg-white px-3.5 py-2.5 text-sm text-gray-900 outline-none transition focus:border-violet-600 focus:ring-4 focus:ring-violet-100 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-50 dark:focus:ring-violet-500/20"
           />
           {errorMotivo && (
-            <p className="text-sm font-medium text-red-600">{errorMotivo}</p>
+            <p className="mt-1 text-sm font-medium text-red-600 dark:text-red-400">{errorMotivo}</p>
           )}
         </div>
 
@@ -161,7 +157,7 @@ export function CargarCierreModal({
         <button
           type="button"
           onClick={onCerrar}
-          className="w-full text-sm font-medium text-gray-500 hover:text-gray-900 py-2"
+          className="w-full py-2.5 text-sm font-semibold text-gray-500 transition hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
         >
           Cancelar
         </button>

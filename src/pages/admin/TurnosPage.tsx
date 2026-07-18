@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../lib/AuthContext'
 import { diasDeSemana, hoyBogota, lunesDeSemana, sumarDias } from '../../lib/fecha'
@@ -123,84 +124,92 @@ export function TurnosPage() {
 
   return (
     <div className="space-y-4">
-      <div className="rounded-xl bg-white p-4 shadow-sm flex flex-wrap items-center gap-3">
+      <div className="flex flex-wrap items-center gap-3 rounded-[20px] border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-800">
         <button
           type="button"
           onClick={() => setLunes((l) => sumarDias(l, -7))}
-          className="rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50"
+          className="flex h-10 items-center gap-1.5 rounded-[12px] border border-gray-200 px-3.5 text-sm font-semibold text-gray-600 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-900/40"
         >
-          ← Semana anterior
+          <ChevronLeft size={15} /> Semana anterior
         </button>
         <button
           type="button"
           onClick={() => setLunes(lunesDeSemana(hoy))}
-          className="rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50"
+          className="flex h-10 items-center rounded-[12px] border border-gray-200 px-3.5 text-sm font-semibold text-gray-600 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-900/40"
         >
           Semana actual
         </button>
         <button
           type="button"
           onClick={() => setLunes((l) => sumarDias(l, 7))}
-          className="rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50"
+          className="flex h-10 items-center gap-1.5 rounded-[12px] border border-gray-200 px-3.5 text-sm font-semibold text-gray-600 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-900/40"
         >
-          Semana siguiente →
+          Semana siguiente <ChevronRight size={15} />
         </button>
-        <span className="text-sm text-gray-500">
+        <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
           {dias[0]} — {dias[6]}
         </span>
       </div>
 
-      <div className="rounded-xl bg-white shadow-sm overflow-x-auto">
+      <div className="overflow-hidden rounded-[20px] border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-800">
         {cargando ? (
-          <p className="p-4 text-gray-500">Cargando...</p>
+          <p className="p-5 text-gray-500 dark:text-gray-400">Cargando...</p>
         ) : (
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-gray-100 text-left text-gray-500">
-                <th className="px-4 py-3 font-medium sticky left-0 bg-white">Negocio</th>
-                {dias.map((d, i) => (
-                  <th
-                    key={d}
-                    className={`px-2 py-3 font-medium text-center ${d === hoy ? 'text-violet-600' : ''}`}
-                  >
-                    {etiquetaDia(d, i)}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {negocios.map((n) => (
-                <tr key={n.id} className="border-b border-gray-50 last:border-0">
-                  <td className="px-4 py-3 sticky left-0 bg-white">
-                    <span className="inline-flex items-center gap-2">
-                      <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: n.color }} />
-                      {n.nombre}
-                    </span>
-                  </td>
-                  {dias.map((d) => {
-                    const claveCelda = clave(n.id, d)
-                    return (
-                      <td key={d} className={`px-2 py-2 ${d === hoy ? 'bg-violet-50/40' : ''}`}>
-                        <select
-                          value={asignaciones[claveCelda] ?? ''}
-                          onChange={(e) => asignar(n.id, d, e.target.value)}
-                          disabled={guardandoClave === claveCelda}
-                          className="w-full rounded-lg border border-gray-300 px-2 py-1.5 text-xs"
-                        >
-                          <option value="">Sin asignar</option>
-                          {cajeros.map((c) => (
-                            <option key={c.id} value={c.id}>
-                              {c.nombre}
-                            </option>
-                          ))}
-                        </select>
-                      </td>
-                    )
-                  })}
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-gray-100 bg-gray-50 text-left text-[11.5px] font-bold uppercase tracking-wide text-gray-500 dark:border-gray-700 dark:bg-gray-900/40 dark:text-gray-400">
+                  <th className="sticky left-0 bg-gray-50 px-5 py-3 dark:bg-gray-900/40">Negocio</th>
+                  {dias.map((d, i) => (
+                    <th
+                      key={d}
+                      className={`px-2 py-3 text-center ${d === hoy ? 'text-violet-600 dark:text-violet-400' : ''}`}
+                    >
+                      {etiquetaDia(d, i)}
+                    </th>
+                  ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {negocios.map((n) => (
+                  <tr
+                    key={n.id}
+                    className="border-b border-gray-50 transition last:border-0 hover:bg-gray-50 dark:border-gray-700/60 dark:hover:bg-gray-900/40"
+                  >
+                    <td className="sticky left-0 h-[52px] bg-white px-5 dark:bg-gray-800">
+                      <span className="inline-flex items-center gap-2">
+                        <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: n.color }} />
+                        <span className="font-medium text-gray-900 dark:text-gray-100">{n.nombre}</span>
+                      </span>
+                    </td>
+                    {dias.map((d) => {
+                      const claveCelda = clave(n.id, d)
+                      return (
+                        <td
+                          key={d}
+                          className={`px-2 py-2 ${d === hoy ? 'bg-violet-50/60 dark:bg-violet-500/10' : ''}`}
+                        >
+                          <select
+                            value={asignaciones[claveCelda] ?? ''}
+                            onChange={(e) => asignar(n.id, d, e.target.value)}
+                            disabled={guardandoClave === claveCelda}
+                            className="w-full rounded-[10px] border border-gray-200 bg-white px-2 py-1.5 text-xs text-gray-900 outline-none transition focus:border-violet-600 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+                          >
+                            <option value="">Sin asignar</option>
+                            {cajeros.map((c) => (
+                              <option key={c.id} value={c.id}>
+                                {c.nombre}
+                              </option>
+                            ))}
+                          </select>
+                        </td>
+                      )
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
     </div>

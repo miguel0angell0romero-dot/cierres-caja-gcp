@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Plus } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../lib/AuthContext'
 import { formatCOP } from '../../lib/money'
@@ -25,6 +26,10 @@ const CAMPOS_NUMERICOS = new Set<CampoEditable>([
   'datafono_liquidado',
   'efectivo_contado',
 ])
+
+const inputCls =
+  'w-full h-11 rounded-[14px] border-[1.5px] border-gray-200 bg-white px-3.5 text-sm text-gray-900 outline-none transition focus:border-violet-600 focus:ring-4 focus:ring-violet-100 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-50 dark:focus:ring-violet-500/20'
+const labelCls = 'mb-1.5 block text-[12.5px] font-semibold text-gray-500 dark:text-gray-400'
 
 type ValoresForm = Record<CampoEditable, string>
 
@@ -332,24 +337,24 @@ export function EditarCierreModal({
   }
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-start justify-center p-4 z-50 overflow-y-auto">
-      <div className="bg-white rounded-xl shadow-lg max-w-lg w-full my-8 p-6 space-y-4">
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-gray-900/50 p-4 backdrop-blur-sm">
+      <div className="animate-card-in my-8 w-full max-w-lg space-y-4 rounded-[20px] bg-white p-6 shadow-lg dark:bg-gray-800">
         <div>
-          <h2 className="font-semibold text-gray-900 text-lg">
+          <h2 className="text-lg font-bold text-gray-900 dark:text-gray-50">
             Editar cierre — {cierre.negocios?.nombre}
           </h2>
-          <p className="text-sm text-gray-500">{cierre.fecha}</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">{cierre.fecha}</p>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-3.5">
           {CAMPOS_EDITABLES.map((campo) => (
-            <div key={campo} className={campo === 'detalle_otros' ? 'col-span-2 space-y-1' : 'space-y-1'}>
-              <label className="text-sm font-medium text-gray-700">{ETIQUETAS_CAMPO[campo]}</label>
+            <div key={campo} className={campo === 'detalle_otros' ? 'col-span-2' : ''}>
+              <label className={labelCls}>{ETIQUETAS_CAMPO[campo]}</label>
               <input
                 type={CAMPOS_NUMERICOS.has(campo) ? 'number' : 'text'}
                 value={valores[campo]}
                 onChange={(e) => setValores((prev) => ({ ...prev, [campo]: e.target.value }))}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                className={inputCls}
               />
             </div>
           ))}
@@ -357,13 +362,13 @@ export function EditarCierreModal({
 
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-gray-900">Gastos en efectivo</h3>
+            <h3 className="text-sm font-bold text-gray-900 dark:text-gray-50">Gastos en efectivo</h3>
             <button
               type="button"
               onClick={agregarGasto}
-              className="text-sm font-medium text-violet-600 hover:text-violet-800"
+              className="flex items-center gap-1 text-sm font-semibold text-violet-600 transition hover:text-violet-800 dark:text-violet-400 dark:hover:text-violet-300"
             >
-              + Agregar gasto
+              <Plus size={14} /> Agregar gasto
             </button>
           </div>
           {gastosEdit.map((g) => (
@@ -379,7 +384,7 @@ export function EditarCierreModal({
                 <button
                   type="button"
                   onClick={() => verFotoActual(g.fotoPathOriginal!)}
-                  className="text-xs font-medium text-violet-600 hover:text-violet-800 ml-1"
+                  className="ml-1 text-xs font-semibold text-violet-600 hover:text-violet-800 dark:text-violet-400 dark:hover:text-violet-300"
                 >
                   Ver foto actual
                 </button>
@@ -390,13 +395,13 @@ export function EditarCierreModal({
 
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-gray-900">Propinas</h3>
+            <h3 className="text-sm font-bold text-gray-900 dark:text-gray-50">Propinas</h3>
             <button
               type="button"
               onClick={agregarPropina}
-              className="text-sm font-medium text-violet-600 hover:text-violet-800"
+              className="flex items-center gap-1 text-sm font-semibold text-violet-600 transition hover:text-violet-800 dark:text-violet-400 dark:hover:text-violet-300"
             >
-              + Agregar propina
+              <Plus size={14} /> Agregar propina
             </button>
           </div>
           {propinasEdit.map((p) => (
@@ -411,51 +416,59 @@ export function EditarCierreModal({
           ))}
         </div>
 
-        <div className="rounded-lg bg-gray-50 p-3 space-y-1 text-sm">
+        <div className="space-y-1 rounded-[14px] bg-gray-50 p-3.5 text-sm dark:bg-gray-900/60">
           <div className="flex justify-between">
-            <span className="text-gray-500">Total venta</span>
-            <span>{formatCOP(totalVenta)}</span>
+            <span className="text-gray-500 dark:text-gray-400">Total venta</span>
+            <span className="text-gray-900 dark:text-gray-100">{formatCOP(totalVenta)}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-gray-500">Total gastos</span>
-            <span>{formatCOP(totalGastos)}</span>
+            <span className="text-gray-500 dark:text-gray-400">Total gastos</span>
+            <span className="text-gray-900 dark:text-gray-100">{formatCOP(totalGastos)}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-gray-500">Total propinas</span>
-            <span>{formatCOP(totalPropinas)}</span>
+            <span className="text-gray-500 dark:text-gray-400">Total propinas</span>
+            <span className="text-gray-900 dark:text-gray-100">{formatCOP(totalPropinas)}</span>
           </div>
-          <div className="flex justify-between font-medium">
+          <div className="flex justify-between font-semibold text-gray-900 dark:text-gray-100">
             <span>Esperado</span>
             <span>{formatCOP(esperado)}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-gray-500">{diferencia >= 0 ? 'Sobrante' : 'Faltante'}</span>
-            <span className={diferencia === 0 ? '' : diferencia > 0 ? 'text-green-600' : 'text-red-600'}>
+            <span className="text-gray-500 dark:text-gray-400">{diferencia >= 0 ? 'Sobrante' : 'Faltante'}</span>
+            <span
+              className={
+                diferencia === 0
+                  ? 'text-gray-900 dark:text-gray-100'
+                  : diferencia > 0
+                    ? 'font-semibold text-green-600 dark:text-green-400'
+                    : 'font-semibold text-red-600 dark:text-red-400'
+              }
+            >
               {formatCOP(Math.abs(diferencia))}
             </span>
           </div>
-          <div className="flex justify-between font-medium">
+          <div className="flex justify-between font-semibold text-gray-900 dark:text-gray-100">
             <span>Entrega</span>
             <span>{formatCOP(entrega)}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-gray-500">Diferencia datáfono</span>
-            <span>{formatCOP(diferenciaDatafono)}</span>
+            <span className="text-gray-500 dark:text-gray-400">Diferencia datáfono</span>
+            <span className="text-gray-900 dark:text-gray-100">{formatCOP(diferenciaDatafono)}</span>
           </div>
         </div>
 
-        <div className="space-y-1">
-          <label className="text-sm font-medium text-gray-700">Motivo del cambio (obligatorio)</label>
+        <div>
+          <label className={labelCls}>Motivo del cambio (obligatorio)</label>
           <textarea
             value={motivo}
             onChange={(e) => setMotivo(e.target.value)}
             rows={2}
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+            className="w-full rounded-[14px] border-[1.5px] border-gray-200 bg-white px-3.5 py-2.5 text-sm text-gray-900 outline-none transition focus:border-violet-600 focus:ring-4 focus:ring-violet-100 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-50 dark:focus:ring-violet-500/20"
           />
         </div>
 
         {hayCambios && (
-          <div className="text-xs text-gray-500 space-y-0.5">
+          <div className="space-y-0.5 text-xs text-gray-500 dark:text-gray-400">
             {cambios.length > 0 && (
               <p>
                 {cambios.length} campo(s) modificado(s): {cambios.map((c) => ETIQUETAS_CAMPO[c.campo]).join(', ')}
@@ -467,14 +480,16 @@ export function EditarCierreModal({
         )}
 
         {error && (
-          <div className="rounded-lg bg-red-50 text-red-700 text-sm font-medium px-3 py-2">{error}</div>
+          <div className="rounded-[14px] bg-red-50 px-3.5 py-2.5 text-sm font-medium text-red-700 dark:bg-red-500/10 dark:text-red-400">
+            {error}
+          </div>
         )}
 
         <div className="flex justify-end gap-2 pt-2">
           <button
             type="button"
             onClick={onCerrar}
-            className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900"
+            className="px-4 py-2.5 text-sm font-semibold text-gray-600 transition hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
           >
             Cancelar
           </button>
@@ -482,7 +497,7 @@ export function EditarCierreModal({
             type="button"
             onClick={guardar}
             disabled={guardando || !hayCambios || !motivo.trim()}
-            className="px-4 py-2 rounded-lg bg-violet-600 text-white text-sm font-medium hover:bg-violet-700 disabled:opacity-50"
+            className="rounded-[14px] bg-gradient-to-br from-violet-600 to-sky-500 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:scale-[1.02] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
           >
             {guardando ? 'Guardando...' : 'Guardar cambios'}
           </button>

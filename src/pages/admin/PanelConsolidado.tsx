@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { CreditCard, Download, Smartphone, Wallet } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { hoyBogota, primerDiaMesBogota } from '../../lib/fecha'
 import { exportarExcel } from '../../lib/excel'
@@ -150,34 +151,34 @@ export function PanelConsolidado() {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-xl bg-white p-4 shadow-sm flex flex-wrap items-end justify-between gap-4">
+      <div className="flex flex-wrap items-end justify-between gap-4 rounded-[20px] border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-800">
         <RangoFechas desde={desde} hasta={hasta} onCambiarDesde={setDesde} onCambiarHasta={setHasta} />
         <button
           type="button"
           onClick={exportar}
           disabled={cierres.length === 0}
-          className="rounded-lg bg-violet-600 text-white text-sm font-medium px-4 py-2 hover:bg-violet-700 disabled:opacity-50"
+          className="flex h-11 items-center gap-2 rounded-[14px] border border-gray-200 bg-white px-5 text-sm font-semibold text-gray-700 shadow-sm transition hover:-translate-y-px hover:scale-[1.015] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:scale-100 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200"
         >
-          Exportar a Excel
+          <Download size={15} /> Exportar a Excel
         </button>
       </div>
 
       {estado === 'cargando' ? (
-        <p className="text-gray-500">Cargando...</p>
+        <p className="text-gray-500 dark:text-gray-400">Cargando...</p>
       ) : cierres.length === 0 ? (
-        <p className="text-gray-500">No hay cierres registrados en este rango de fechas.</p>
+        <p className="text-gray-500 dark:text-gray-400">No hay cierres registrados en este rango de fechas.</p>
       ) : (
         <>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <KpiCard titulo="Venta total" valor={totalVenta} />
-            <KpiCard titulo="Efectivo" valor={totalEfectivo} />
-            <KpiCard titulo="Tarjetas (datáfono)" valor={totalDatafono} />
-            <KpiCard titulo="Apps (QR + Nequi)" valor={totalApps} />
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+            <KpiCard titulo="Venta total" valor={totalVenta} icono={Wallet} acento="violet" />
+            <KpiCard titulo="Efectivo" valor={totalEfectivo} icono={Wallet} acento="green" />
+            <KpiCard titulo="Tarjetas (datáfono)" valor={totalDatafono} icono={CreditCard} acento="sky" />
+            <KpiCard titulo="Apps (QR + Nequi)" valor={totalApps} icono={Smartphone} acento="amber" />
           </div>
 
           <BarrasMedioPago datos={datosBarras} />
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
             {Array.from(porNegocio.entries()).map(([id, n]) => (
               <TarjetaNegocio
                 key={id}

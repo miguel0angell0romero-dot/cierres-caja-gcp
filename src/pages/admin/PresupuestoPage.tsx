@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { PiggyBank } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../lib/AuthContext'
 import { formatCOP } from '../../lib/money'
@@ -140,23 +141,30 @@ export function PresupuestoPage() {
 
   return (
     <div className="space-y-4">
-      <div className="rounded-xl bg-white p-4 shadow-sm flex flex-wrap items-center gap-3">
-        <label className="text-sm font-medium text-gray-700">Mes</label>
+      <div className="flex flex-wrap items-center gap-3 rounded-[20px] border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-800">
+        <label className="text-[12.5px] font-semibold text-gray-500 dark:text-gray-400">Mes</label>
         <input
           type="month"
           value={mesSeleccionado}
           onChange={(e) => setMesSeleccionado(e.target.value)}
-          className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
+          className="h-11 rounded-[14px] border-[1.5px] border-gray-200 bg-white px-3.5 text-sm text-gray-900 outline-none transition focus:border-violet-600 focus:ring-4 focus:ring-violet-100 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-50 dark:focus:ring-violet-500/20"
         />
-        {mensajeExito && <span className="text-sm text-green-600 font-medium">{mensajeExito}</span>}
+        {mensajeExito && (
+          <span className="animate-fade-up text-sm font-semibold text-green-600 dark:text-green-400">
+            {mensajeExito}
+          </span>
+        )}
       </div>
 
       {cargando ? (
-        <p className="text-gray-500">Cargando...</p>
+        <p className="text-gray-500 dark:text-gray-400">Cargando...</p>
       ) : (
         <>
-          <div className="rounded-xl bg-white p-4 shadow-sm">
-            <h2 className="font-semibold text-gray-900 mb-2">Total combinado (los 3 negocios)</h2>
+          <div className="rounded-[20px] border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-800">
+            <h2 className="mb-3 flex items-center gap-2 text-[15px] font-bold tracking-tight text-gray-900 dark:text-gray-50">
+              <PiggyBank size={17} className="text-violet-600 dark:text-violet-400" /> Total combinado (los 3
+              negocios)
+            </h2>
             <TarjetaPresupuesto
               presupuesto={totalPresupuesto}
               ventaReal={totalVentas}
@@ -169,12 +177,15 @@ export function PresupuestoPage() {
 
           {hayDatosParaGrafica && <GraficaPresupuesto datos={datosGrafica} />}
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
             {negocios.map((n) => (
-              <div key={n.id} className="rounded-xl bg-white p-4 shadow-sm space-y-3">
-                <div className="flex items-center gap-2">
-                  <span className="h-3 w-3 rounded-full" style={{ backgroundColor: n.color }} />
-                  <h3 className="font-semibold text-gray-900">{n.nombre}</h3>
+              <div
+                key={n.id}
+                className="space-y-3.5 rounded-[20px] border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-800"
+              >
+                <div className="flex items-center gap-2.5">
+                  <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: n.color }} />
+                  <h3 className="font-bold tracking-tight text-gray-900 dark:text-gray-50">{n.nombre}</h3>
                 </div>
 
                 {esSuperAdmin && (
@@ -185,13 +196,13 @@ export function PresupuestoPage() {
                       value={edicion[n.id] ?? ''}
                       onChange={(e) => setEdicion((prev) => ({ ...prev, [n.id]: e.target.value }))}
                       placeholder="Presupuesto del mes"
-                      className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                      className="h-10 flex-1 rounded-[12px] border-[1.5px] border-gray-200 bg-white px-3 text-sm text-gray-900 outline-none transition focus:border-violet-600 focus:ring-4 focus:ring-violet-100 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-50 dark:focus:ring-violet-500/20"
                     />
                     <button
                       type="button"
                       onClick={() => guardarPresupuesto(n.id)}
                       disabled={guardandoId === n.id}
-                      className="rounded-lg bg-violet-600 text-white text-sm font-medium px-3 py-2 hover:bg-violet-700 disabled:opacity-50"
+                      className="rounded-[12px] bg-gradient-to-br from-violet-600 to-sky-500 px-3.5 text-sm font-semibold text-white shadow-sm transition hover:scale-[1.03] disabled:opacity-50"
                     >
                       {guardandoId === n.id ? '...' : 'Guardar'}
                     </button>
@@ -231,17 +242,17 @@ function TarjetaPresupuesto({
   esFuturo: boolean
 }) {
   if (presupuesto === 0) {
-    return <p className="text-sm text-gray-400">Sin presupuesto definido para este mes.</p>
+    return <p className="text-sm text-gray-400 dark:text-gray-500">Sin presupuesto definido para este mes.</p>
   }
 
   if (esFuturo) {
     return (
-      <div className="space-y-1 text-sm">
+      <div className="space-y-1.5 text-sm">
         <div className="flex justify-between">
-          <span className="text-gray-500">Presupuesto mensual</span>
-          <span className="font-medium">{formatCOP(presupuesto)}</span>
+          <span className="text-gray-500 dark:text-gray-400">Presupuesto mensual</span>
+          <span className="font-semibold text-gray-900 dark:text-gray-100">{formatCOP(presupuesto)}</span>
         </div>
-        <p className="text-gray-400">Este mes todavía no ha comenzado.</p>
+        <p className="text-gray-400 dark:text-gray-500">Este mes todavía no ha comenzado.</p>
       </div>
     )
   }
@@ -252,39 +263,43 @@ function TarjetaPresupuesto({
   const porcentajeEsperado = fraccionMes * 100
 
   return (
-    <div className="space-y-1 text-sm">
+    <div className="space-y-1.5 text-sm">
       <div className="flex justify-between">
-        <span className="text-gray-500">Presupuesto mensual</span>
-        <span className="font-medium">{formatCOP(presupuesto)}</span>
+        <span className="text-gray-500 dark:text-gray-400">Presupuesto mensual</span>
+        <span className="font-semibold text-gray-900 dark:text-gray-100">{formatCOP(presupuesto)}</span>
       </div>
       <div className="flex justify-between">
-        <span className="text-gray-500">Venta real a la fecha</span>
-        <span className="font-medium">{formatCOP(ventaReal)}</span>
+        <span className="text-gray-500 dark:text-gray-400">Venta real a la fecha</span>
+        <span className="font-semibold text-gray-900 dark:text-gray-100">{formatCOP(ventaReal)}</span>
       </div>
       <div className="flex justify-between">
-        <span className="text-gray-500">
+        <span className="text-gray-500 dark:text-gray-400">
           Esperado a la fecha (día {diasTranscurridos}/{diasDelMes})
         </span>
-        <span className="font-medium">{formatCOP(esperadoAFecha)}</span>
+        <span className="font-semibold text-gray-900 dark:text-gray-100">{formatCOP(esperadoAFecha)}</span>
       </div>
-      <div className="flex justify-between">
-        <span className="text-gray-500">{diferencia >= 0 ? 'Por encima de lo esperado' : 'Colgados (por debajo)'}</span>
-        <span className={`font-semibold ${diferencia >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+      <div className="flex justify-between border-t border-gray-100 pt-2.5 dark:border-gray-700">
+        <span className="text-gray-500 dark:text-gray-400">
+          {diferencia >= 0 ? 'Por encima de lo esperado' : 'Colgados (por debajo)'}
+        </span>
+        <span
+          className={`font-bold ${diferencia >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}
+        >
           {formatCOP(Math.abs(diferencia))}
         </span>
       </div>
-      <div className="pt-1">
-        <div className="flex justify-between text-xs text-gray-500 mb-1">
+      <div className="pt-1.5">
+        <div className="mb-1.5 flex justify-between text-xs text-gray-500 dark:text-gray-400">
           <span>Avance del presupuesto</span>
-          <span>{porcentajeAvance.toFixed(0)}%</span>
+          <span className="font-semibold">{porcentajeAvance.toFixed(0)}%</span>
         </div>
-        <div className="relative h-2 bg-gray-100 rounded-full overflow-hidden">
+        <div className="relative h-2 overflow-hidden rounded-full bg-gray-100 dark:bg-gray-700">
           <div
-            className={`h-full ${porcentajeAvance >= porcentajeEsperado ? 'bg-green-500' : 'bg-amber-500'}`}
+            className={`h-full rounded-full transition-all ${porcentajeAvance >= porcentajeEsperado ? 'bg-green-500' : 'bg-amber-500'}`}
             style={{ width: `${Math.min(100, porcentajeAvance)}%` }}
           />
           <div
-            className="absolute top-0 h-full w-px bg-gray-500"
+            className="absolute top-0 h-full w-0.5 bg-gray-500 dark:bg-gray-300"
             style={{ left: `${Math.min(100, porcentajeEsperado)}%` }}
             title="Punto esperado a la fecha"
           />

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Plus } from 'lucide-react'
 import { formatCOP } from '../../lib/money'
 import { CATEGORIAS_GASTO } from '../../lib/constantes'
 import { GastoRow } from './GastoRow'
@@ -10,6 +11,10 @@ function numero(v: string) {
   const n = Number(v)
   return Number.isFinite(n) ? n : 0
 }
+
+const seccionCls =
+  'space-y-3.5 rounded-[20px] border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-800'
+const tituloCls = 'text-[15px] font-bold tracking-tight text-gray-900 dark:text-gray-50'
 
 // Formulario completo de cierre (ventas, detalle QR/Nequi, gastos con foto,
 // propinas y cuadre de efectivo/datáfono). Lo usan tanto el cajero (para su
@@ -135,8 +140,8 @@ export function FormularioCierre({
 
   return (
     <div className="space-y-4">
-      <section className="rounded-xl bg-white p-4 shadow-sm space-y-3">
-        <h2 className="font-semibold text-gray-900">Ventas según sistema</h2>
+      <section className={seccionCls}>
+        <h2 className={tituloCls}>Ventas según sistema</h2>
 
         <Campo label="Efectivo" value={ventaEfectivo} onChange={setVentaEfectivo} />
 
@@ -145,7 +150,7 @@ export function FormularioCierre({
           <button
             type="button"
             onClick={() => setMostrarDetalleQr((v) => !v)}
-            className="text-xs font-medium text-violet-600 mt-1"
+            className="mt-1.5 text-xs font-semibold text-violet-600 dark:text-violet-400"
           >
             {mostrarDetalleQr ? 'Ocultar detalle' : 'Detallar pagos'}
           </button>
@@ -159,7 +164,7 @@ export function FormularioCierre({
           <button
             type="button"
             onClick={() => setMostrarDetalleNequi((v) => !v)}
-            className="text-xs font-medium text-violet-600 mt-1"
+            className="mt-1.5 text-xs font-semibold text-violet-600 dark:text-violet-400"
           >
             {mostrarDetalleNequi ? 'Ocultar detalle' : 'Detallar pagos'}
           </button>
@@ -171,32 +176,38 @@ export function FormularioCierre({
         <Campo label="Datáfono" value={ventaDatafono} onChange={setVentaDatafono} />
         <Campo label="Crédito" value={ventaCredito} onChange={setVentaCredito} />
 
-        <div className="flex justify-between pt-2 border-t border-gray-100 font-semibold text-gray-900">
+        <div className="flex justify-between border-t border-gray-100 pt-3 font-bold text-gray-900 dark:border-gray-700 dark:text-gray-50">
           <span>Total venta</span>
           <span>{formatCOP(totalVenta)}</span>
         </div>
       </section>
 
-      <section className="rounded-xl bg-white p-4 shadow-sm space-y-3">
-        <h2 className="font-semibold text-gray-900">Cuadre de datáfono</h2>
+      <section className={seccionCls}>
+        <h2 className={tituloCls}>Cuadre de datáfono</h2>
         <Campo label="Datáfono liquidado (terminal)" value={datafonoLiquidado} onChange={setDatafonoLiquidado} />
         <div className="flex justify-between text-sm">
-          <span className="text-gray-500">Diferencia (liquidado − sistema)</span>
-          <span className={diferenciaDatafono === 0 ? 'text-gray-800' : 'text-amber-600 font-medium'}>
+          <span className="text-gray-500 dark:text-gray-400">Diferencia (liquidado − sistema)</span>
+          <span
+            className={
+              diferenciaDatafono === 0
+                ? 'text-gray-800 dark:text-gray-200'
+                : 'font-semibold text-amber-600 dark:text-amber-400'
+            }
+          >
             {formatCOP(diferenciaDatafono)}
           </span>
         </div>
       </section>
 
-      <section className="rounded-xl bg-white p-4 shadow-sm space-y-3">
+      <section className={seccionCls}>
         <div className="flex items-center justify-between">
-          <h2 className="font-semibold text-gray-900">Gastos en efectivo</h2>
+          <h2 className={tituloCls}>Gastos en efectivo</h2>
           <button
             type="button"
             onClick={agregarGasto}
-            className="text-sm font-medium text-violet-600 hover:text-violet-800"
+            className="flex items-center gap-1 text-sm font-semibold text-violet-600 transition hover:text-violet-800 dark:text-violet-400 dark:hover:text-violet-300"
           >
-            + Agregar gasto
+            <Plus size={14} /> Agregar gasto
           </button>
         </div>
 
@@ -211,24 +222,24 @@ export function FormularioCierre({
           />
         ))}
 
-        <div className="flex justify-between pt-2 border-t border-gray-100 font-semibold text-gray-900">
+        <div className="flex justify-between border-t border-gray-100 pt-3 font-bold text-gray-900 dark:border-gray-700 dark:text-gray-50">
           <span>Total gastos</span>
           <span>{formatCOP(totalGastos)}</span>
         </div>
       </section>
 
-      <section className="rounded-xl bg-white p-4 shadow-sm space-y-3">
+      <section className={seccionCls}>
         <div className="flex items-center justify-between">
-          <h2 className="font-semibold text-gray-900">Propinas</h2>
+          <h2 className={tituloCls}>Propinas</h2>
           <button
             type="button"
             onClick={agregarPropina}
-            className="text-sm font-medium text-violet-600 hover:text-violet-800"
+            className="flex items-center gap-1 text-sm font-semibold text-violet-600 transition hover:text-violet-800 dark:text-violet-400 dark:hover:text-violet-300"
           >
-            + Agregar propina
+            <Plus size={14} /> Agregar propina
           </button>
         </div>
-        <p className="text-xs text-gray-400 -mt-2">
+        <p className="-mt-2 text-xs text-gray-400 dark:text-gray-500">
           Se cobran junto con la cuenta y se entregan en efectivo al mesero: se descuentan del
           efectivo esperado.
         </p>
@@ -244,32 +255,32 @@ export function FormularioCierre({
           />
         ))}
 
-        <div className="flex justify-between pt-2 border-t border-gray-100 font-semibold text-gray-900">
+        <div className="flex justify-between border-t border-gray-100 pt-3 font-bold text-gray-900 dark:border-gray-700 dark:text-gray-50">
           <span>Total propinas</span>
           <span>{formatCOP(totalPropinas)}</span>
         </div>
       </section>
 
-      <section className="rounded-xl bg-white p-4 shadow-sm space-y-3">
-        <h2 className="font-semibold text-gray-900">Cuadre de efectivo</h2>
+      <section className={seccionCls}>
+        <h2 className={tituloCls}>Cuadre de efectivo</h2>
 
         <div className="flex justify-between text-sm">
-          <span className="text-gray-500">Base</span>
-          <span>{formatCOP(baseEfectivo)}</span>
+          <span className="text-gray-500 dark:text-gray-400">Base</span>
+          <span className="text-gray-800 dark:text-gray-200">{formatCOP(baseEfectivo)}</span>
         </div>
         <div className="flex justify-between text-sm">
-          <span className="text-gray-500">Ventas efectivo</span>
-          <span>{formatCOP(ventaEfectivo)}</span>
+          <span className="text-gray-500 dark:text-gray-400">Ventas efectivo</span>
+          <span className="text-gray-800 dark:text-gray-200">{formatCOP(ventaEfectivo)}</span>
         </div>
         <div className="flex justify-between text-sm">
-          <span className="text-gray-500">Gastos</span>
-          <span>- {formatCOP(totalGastos)}</span>
+          <span className="text-gray-500 dark:text-gray-400">Gastos</span>
+          <span className="text-gray-800 dark:text-gray-200">- {formatCOP(totalGastos)}</span>
         </div>
         <div className="flex justify-between text-sm">
-          <span className="text-gray-500">Propinas</span>
-          <span>- {formatCOP(totalPropinas)}</span>
+          <span className="text-gray-500 dark:text-gray-400">Propinas</span>
+          <span className="text-gray-800 dark:text-gray-200">- {formatCOP(totalPropinas)}</span>
         </div>
-        <div className="flex justify-between font-semibold text-gray-900 pt-1 border-t border-gray-100">
+        <div className="flex justify-between border-t border-gray-100 pt-2.5 font-bold text-gray-900 dark:border-gray-700 dark:text-gray-50">
           <span>Esperado</span>
           <span>{formatCOP(esperado)}</span>
         </div>
@@ -277,55 +288,67 @@ export function FormularioCierre({
         <Campo label="Efectivo contado" value={efectivoContado} onChange={setEfectivoContado} />
 
         <div className="flex justify-between text-sm">
-          <span className="text-gray-500">{diferencia >= 0 ? 'Sobrante' : 'Faltante'}</span>
-          <span className={diferencia === 0 ? 'text-gray-800' : diferencia > 0 ? 'text-green-600 font-medium' : 'text-red-600 font-medium'}>
+          <span className="text-gray-500 dark:text-gray-400">{diferencia >= 0 ? 'Sobrante' : 'Faltante'}</span>
+          <span
+            className={
+              diferencia === 0
+                ? 'text-gray-800 dark:text-gray-200'
+                : diferencia > 0
+                  ? 'font-semibold text-green-600 dark:text-green-400'
+                  : 'font-semibold text-red-600 dark:text-red-400'
+            }
+          >
             {formatCOP(Math.abs(diferencia))}
           </span>
         </div>
-        <div className="flex justify-between font-semibold text-gray-900">
+        <div className="flex justify-between font-bold text-gray-900 dark:text-gray-50">
           <span>Entrega</span>
           <span>{formatCOP(entrega)}</span>
         </div>
 
-        <div className="space-y-1">
-          <label className="text-sm font-medium text-gray-700">Recibe</label>
+        <div>
+          <label className="mb-1.5 block text-[12.5px] font-semibold text-gray-500 dark:text-gray-400">
+            Recibe
+          </label>
           <input
             type="text"
             value={recibe}
             onChange={(e) => setRecibe(e.target.value)}
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+            className="h-11 w-full rounded-[14px] border-[1.5px] border-gray-200 bg-white px-3.5 text-sm text-gray-900 outline-none transition focus:border-violet-600 focus:ring-4 focus:ring-violet-100 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-50 dark:focus:ring-violet-500/20"
           />
         </div>
       </section>
 
-      <section className="rounded-xl bg-white p-4 shadow-sm space-y-2">
-        <label className="text-sm font-medium text-gray-700">Notas adicionales (opcional)</label>
+      <section className={seccionCls}>
+        <label className="block text-[12.5px] font-semibold text-gray-500 dark:text-gray-400">
+          Notas adicionales (opcional)
+        </label>
         <textarea
           value={detalleOtros}
           onChange={(e) => setDetalleOtros(e.target.value)}
           rows={2}
-          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+          className="w-full rounded-[14px] border-[1.5px] border-gray-200 bg-white px-3.5 py-2.5 text-sm text-gray-900 outline-none transition focus:border-violet-600 focus:ring-4 focus:ring-violet-100 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-50 dark:focus:ring-violet-500/20"
         />
       </section>
 
       {errorGuardado && (
-        <div className="rounded-lg bg-red-50 text-red-700 text-sm font-medium px-4 py-3">
+        <div className="animate-fade-up rounded-[14px] bg-red-50 px-4 py-3 text-sm font-medium text-red-700 dark:bg-red-500/10 dark:text-red-400">
           {errorGuardado}
         </div>
       )}
 
       {mensajeBorrador && (
-        <div className="rounded-lg bg-green-50 text-green-700 text-sm font-medium px-4 py-3 text-center">
+        <div className="animate-fade-up rounded-[14px] bg-green-50 px-4 py-3 text-center text-sm font-medium text-green-700 dark:bg-green-500/10 dark:text-green-400">
           {mensajeBorrador}
         </div>
       )}
 
-      <div className="space-y-2">
+      <div className="space-y-2.5">
         {permitirBorrador && (
           <button
             type="button"
             onClick={() => onGuardarBorrador?.(datosActuales)}
-            className="w-full rounded-lg border border-violet-600 text-violet-600 font-medium py-3 hover:bg-violet-50"
+            className="w-full rounded-[14px] border border-violet-200 py-3 font-semibold text-violet-600 transition hover:bg-violet-50 dark:border-violet-500/30 dark:text-violet-400 dark:hover:bg-violet-500/10"
           >
             Guardar borrador
           </button>
@@ -335,23 +358,23 @@ export function FormularioCierre({
           type="button"
           onClick={manejarGuardarClick}
           disabled={guardando}
-          className="w-full rounded-lg bg-violet-600 text-white font-medium py-3 hover:bg-violet-700 disabled:opacity-50"
+          className="w-full rounded-[14px] bg-gradient-to-br from-violet-600 to-sky-500 py-3.5 font-semibold text-white shadow-[0_10px_24px_-10px_rgba(37,99,235,0.6)] transition hover:-translate-y-px hover:scale-[1.01] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:scale-100"
         >
           {guardando ? 'Guardando...' : textoBoton}
         </button>
       </div>
 
       {mostrarConfirmacion && mensajeConfirmacion && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl shadow-lg max-w-sm w-full p-6 space-y-4 text-center">
-            <h2 className="font-semibold text-gray-900 text-lg">¿Confirmar cierre de caja?</h2>
-            <p className="text-sm text-gray-600">{mensajeConfirmacion}</p>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/50 p-4 backdrop-blur-sm">
+          <div className="animate-card-in w-full max-w-sm space-y-4 rounded-[20px] bg-white p-6 text-center shadow-lg dark:bg-gray-800">
+            <h2 className="text-lg font-bold text-gray-900 dark:text-gray-50">¿Confirmar cierre de caja?</h2>
+            <p className="text-sm text-gray-600 dark:text-gray-400">{mensajeConfirmacion}</p>
             <div className="flex gap-2 pt-2">
               <button
                 type="button"
                 onClick={() => setMostrarConfirmacion(false)}
                 disabled={guardando}
-                className="flex-1 rounded-lg border border-gray-300 text-gray-600 font-medium py-2 hover:bg-gray-50 disabled:opacity-50"
+                className="flex-1 rounded-[14px] border border-gray-200 py-2.5 font-semibold text-gray-600 transition hover:bg-gray-50 disabled:opacity-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-900/40"
               >
                 Cancelar
               </button>
@@ -359,7 +382,7 @@ export function FormularioCierre({
                 type="button"
                 onClick={confirmarGuardar}
                 disabled={guardando}
-                className="flex-1 rounded-lg bg-violet-600 text-white font-medium py-2 hover:bg-violet-700 disabled:opacity-50"
+                className="flex-1 rounded-[14px] bg-gradient-to-br from-violet-600 to-sky-500 py-2.5 font-semibold text-white transition hover:scale-[1.02] disabled:opacity-50"
               >
                 {guardando ? 'Guardando...' : 'Sí, cerrar caja'}
               </button>
@@ -381,15 +404,17 @@ function Campo({
   onChange: (valor: number) => void
 }) {
   return (
-    <div className="space-y-1">
-      <label className="text-sm font-medium text-gray-700">{label}</label>
+    <div>
+      <label className="mb-1.5 block text-[12.5px] font-semibold text-gray-500 dark:text-gray-400">
+        {label}
+      </label>
       <input
         type="number"
         min={0}
         step={1}
         value={value || ''}
         onChange={(e) => onChange(numero(e.target.value))}
-        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+        className="h-11 w-full rounded-[14px] border-[1.5px] border-gray-200 bg-white px-3.5 text-sm text-gray-900 outline-none transition focus:border-violet-600 focus:ring-4 focus:ring-violet-100 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-50 dark:focus:ring-violet-500/20"
       />
     </div>
   )

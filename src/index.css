@@ -1,1 +1,134 @@
 @import "tailwindcss";
+@import "@fontsource-variable/inter";
+
+/* Modo oscuro manual vía atributo data-theme en <html>, además de la
+   preferencia del sistema (ver ThemeContext). */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+@theme {
+  --font-sans: 'Inter Variable', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    'Helvetica Neue', Arial, sans-serif;
+
+  /* Escala neutra reemplazada por la paleta premium (fondo #F8FAFC, texto #0F172A) */
+  --color-gray-50: #f8fafc;
+  --color-gray-100: #f1f5f9;
+  --color-gray-200: #e3e8f0;
+  --color-gray-300: #cbd5e1;
+  --color-gray-400: #94a3b8;
+  --color-gray-500: #5b6b85;
+  --color-gray-600: #475569;
+  --color-gray-700: #334155;
+  --color-gray-800: #1e293b;
+  --color-gray-900: #0f172a;
+
+  /* Acento primario (antes violeta) reemplazado por el azul #2563EB */
+  --color-violet-50: #eff4ff;
+  --color-violet-100: #dce8ff;
+  --color-violet-200: #bbd3ff;
+  --color-violet-300: #8fb8ff;
+  --color-violet-400: #5c97ff;
+  --color-violet-500: #3b78f0;
+  --color-violet-600: #2563eb;
+  --color-violet-700: #1d4ed8;
+  --color-violet-800: #1e40af;
+  --color-violet-900: #1e3a8a;
+
+  --color-green-50: #ecfdf3;
+  --color-green-500: #22c55e;
+  --color-green-600: #16a34a;
+  --color-green-700: #15803d;
+
+  --color-amber-50: #fffbeb;
+  --color-amber-500: #f59e0b;
+  --color-amber-600: #d97706;
+
+  --color-red-50: #fef2f2;
+  --color-red-500: #ef4444;
+  --color-red-600: #dc2626;
+  --color-red-700: #b91c1c;
+
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
+  --shadow-md: 0 8px 24px -8px rgba(15, 23, 42, 0.16);
+  --shadow-lg: 0 24px 64px -20px rgba(15, 23, 42, 0.28);
+}
+
+:root[data-theme='dark'] {
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 8px 24px -8px rgba(0, 0, 0, 0.55);
+  --shadow-lg: 0 24px 64px -20px rgba(0, 0, 0, 0.65);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --shadow-md: 0 8px 24px -8px rgba(0, 0, 0, 0.55);
+    --shadow-lg: 0 24px 64px -20px rgba(0, 0, 0, 0.65);
+  }
+}
+
+body {
+  font-variant-numeric: tabular-nums;
+  background-color: var(--color-gray-50);
+  color: var(--color-gray-900);
+}
+
+:root[data-theme='dark'] body {
+  background-color: var(--color-gray-900);
+  color: var(--color-gray-50);
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes card-in {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.4s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+.animate-card-in {
+  animation: card-in 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.login-backdrop {
+  background:
+    radial-gradient(1100px 620px at 14% -8%, rgba(56, 189, 248, 0.3), transparent 60%),
+    radial-gradient(900px 620px at 96% 8%, rgba(37, 99, 235, 0.34), transparent 60%),
+    linear-gradient(180deg, var(--color-gray-50), color-mix(in srgb, var(--color-gray-50) 80%, #2563eb 6%));
+}
+
+:root[data-theme='dark'] .login-backdrop {
+  background:
+    radial-gradient(1100px 620px at 14% -8%, rgba(56, 189, 248, 0.16), transparent 60%),
+    radial-gradient(900px 620px at 96% 8%, rgba(37, 99, 235, 0.22), transparent 60%),
+    linear-gradient(180deg, var(--color-gray-900), color-mix(in srgb, var(--color-gray-900) 80%, #2563eb 8%));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}

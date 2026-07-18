@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { Download, Pencil, Plus, Trash2, TrendingDown, TrendingUp } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../lib/AuthContext'
 import { formatCOP } from '../../lib/money'
@@ -14,6 +15,8 @@ interface CajeroOpcion {
   id: string
   nombre: string
 }
+
+const UMBRAL_CUADRE = 1000
 
 export function CierresPage() {
   const { profile } = useAuth()
@@ -148,14 +151,16 @@ export function CierresPage() {
 
   return (
     <div className="space-y-4">
-      <div className="rounded-xl bg-white p-4 shadow-sm flex flex-wrap items-end justify-between gap-4">
-        <div className="flex flex-wrap items-end gap-4">
-          <div className="space-y-1">
-            <label className="text-sm font-medium text-gray-700">Negocio</label>
+      <div className="flex flex-wrap items-end justify-between gap-4 rounded-[20px] border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-800">
+        <div className="flex flex-wrap items-end gap-3.5">
+          <div>
+            <label className="mb-1.5 block text-[12.5px] font-semibold text-gray-500 dark:text-gray-400">
+              Negocio
+            </label>
             <select
               value={filtroNegocio}
               onChange={(e) => setFiltroNegocio(e.target.value)}
-              className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
+              className="h-11 rounded-[14px] border-[1.5px] border-gray-200 bg-white px-3.5 text-sm text-gray-900 outline-none transition focus:border-violet-600 focus:ring-4 focus:ring-violet-100 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-50 dark:focus:ring-violet-500/20"
             >
               <option value="todos">Todos</option>
               {negocios.map((n) => (
@@ -173,74 +178,119 @@ export function CierresPage() {
             <button
               type="button"
               onClick={() => setMostrarCargarCierre(true)}
-              className="rounded-lg border border-violet-600 text-violet-600 text-sm font-medium px-4 py-2 hover:bg-violet-50"
+              className="flex h-11 items-center gap-2 rounded-[14px] border border-violet-200 px-4 text-sm font-semibold text-violet-600 shadow-sm transition hover:-translate-y-px hover:scale-[1.015] hover:bg-violet-50 dark:border-violet-500/30 dark:text-violet-400 dark:hover:bg-violet-500/10"
             >
-              + Cargar cierre anterior
+              <Plus size={15} /> Cargar cierre anterior
             </button>
           )}
           <button
             type="button"
             onClick={exportar}
             disabled={cierres.length === 0}
-            className="rounded-lg bg-violet-600 text-white text-sm font-medium px-4 py-2 hover:bg-violet-700 disabled:opacity-50"
+            className="flex h-11 items-center gap-2 rounded-[14px] bg-gradient-to-br from-violet-600 to-sky-500 px-4 text-sm font-semibold text-white shadow-[0_10px_24px_-10px_rgba(37,99,235,0.6)] transition hover:-translate-y-px hover:scale-[1.015] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:scale-100"
           >
-            Exportar a Excel
+            <Download size={15} /> Exportar a Excel
           </button>
         </div>
       </div>
 
-      <div className="rounded-xl bg-white shadow-sm overflow-x-auto">
+      <div className="overflow-hidden rounded-[20px] border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-800">
         {cargando ? (
-          <p className="p-4 text-gray-500">Cargando...</p>
+          <p className="p-5 text-gray-500 dark:text-gray-400">Cargando...</p>
         ) : cierres.length === 0 ? (
-          <p className="p-4 text-gray-500">No hay cierres registrados en este rango.</p>
+          <p className="p-5 text-gray-500 dark:text-gray-400">No hay cierres registrados en este rango.</p>
         ) : (
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-gray-100 text-left text-gray-500">
-                <th className="px-4 py-3 font-medium">Fecha</th>
-                <th className="px-4 py-3 font-medium">Negocio</th>
-                <th className="px-4 py-3 font-medium">Cajero</th>
-                <th className="px-4 py-3 font-medium text-right">Total venta</th>
-                <th className="px-4 py-3 font-medium text-right">Entrega</th>
-                {esSuperAdmin && <th className="px-4 py-3 font-medium"></th>}
-              </tr>
-            </thead>
-            <tbody>
-              {cierres.map((c) => {
-                const totalVenta =
-                  c.venta_efectivo + c.venta_qr + c.venta_nequi + c.venta_datafono + c.venta_credito
-                const entrega = c.efectivo_contado - c.base_efectivo
-                return (
-                  <tr key={c.id} className="border-b border-gray-50 last:border-0">
-                    <td className="px-4 py-3">{c.fecha}</td>
-                    <td className="px-4 py-3">{c.negocios?.nombre}</td>
-                    <td className="px-4 py-3">{c.profiles?.nombre}</td>
-                    <td className="px-4 py-3 text-right">{formatCOP(totalVenta)}</td>
-                    <td className="px-4 py-3 text-right">{formatCOP(entrega)}</td>
-                    {esSuperAdmin && (
-                      <td className="px-4 py-3 text-right space-x-3 whitespace-nowrap">
-                        <button
-                          type="button"
-                          onClick={() => setCierreEditando(c)}
-                          className="text-violet-600 font-medium hover:text-violet-800"
-                        >
-                          Editar
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setCierreEliminando(c)}
-                          className="text-red-600 font-medium hover:text-red-800"
-                        >
-                          Eliminar
-                        </button>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[720px] text-sm">
+              <thead>
+                <tr className="border-b border-gray-100 bg-gray-50 text-left text-[11.5px] font-bold uppercase tracking-wide text-gray-500 dark:border-gray-700 dark:bg-gray-900/40 dark:text-gray-400">
+                  <th className="px-5 py-3">Fecha</th>
+                  <th className="px-5 py-3">Negocio</th>
+                  <th className="px-5 py-3">Cajero</th>
+                  <th className="px-5 py-3 text-right">Total venta</th>
+                  <th className="px-5 py-3 text-right">Entrega</th>
+                  <th className="px-5 py-3">Cuadre</th>
+                  {esSuperAdmin && <th className="px-5 py-3"></th>}
+                </tr>
+              </thead>
+              <tbody>
+                {cierres.map((c) => {
+                  const totalVenta =
+                    c.venta_efectivo + c.venta_qr + c.venta_nequi + c.venta_datafono + c.venta_credito
+                  const entrega = c.efectivo_contado - c.base_efectivo
+                  const totalGastos = c.gastos.reduce((s, g) => s + g.valor, 0)
+                  const totalPropinas = c.propinas.reduce((s, p) => s + p.valor, 0)
+                  const esperado = c.base_efectivo + c.venta_efectivo - totalGastos - totalPropinas
+                  const diferencia = c.efectivo_contado - esperado
+                  const cuadrado = Math.abs(diferencia) <= UMBRAL_CUADRE
+
+                  return (
+                    <tr
+                      key={c.id}
+                      className="border-b border-gray-50 transition last:border-0 hover:bg-gray-50 dark:border-gray-700/60 dark:hover:bg-gray-900/40"
+                    >
+                      <td className="h-[52px] px-5 text-gray-700 dark:text-gray-300">{c.fecha}</td>
+                      <td className="px-5">
+                        <span className="inline-flex items-center gap-2 font-medium text-gray-900 dark:text-gray-100">
+                          <span
+                            className="h-2 w-2 shrink-0 rounded-full"
+                            style={{ backgroundColor: negocios.find((n) => n.id === c.negocio_id)?.color ?? '#94a3b8' }}
+                          />
+                          {c.negocios?.nombre}
+                        </span>
                       </td>
-                    )}
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
+                      <td className="px-5 text-gray-600 dark:text-gray-400">{c.profiles?.nombre}</td>
+                      <td className="px-5 text-right font-medium text-gray-900 dark:text-gray-100">
+                        {formatCOP(totalVenta)}
+                      </td>
+                      <td
+                        className={`px-5 text-right font-medium ${entrega < 0 ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-gray-100'}`}
+                      >
+                        {formatCOP(entrega)}
+                      </td>
+                      <td className="px-5">
+                        {cuadrado ? (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-green-50 px-2.5 py-1 text-xs font-semibold text-green-700 dark:bg-green-500/10 dark:text-green-400">
+                            <TrendingUp size={11} /> Cuadrado
+                          </span>
+                        ) : diferencia < 0 ? (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-700 dark:bg-red-500/10 dark:text-red-400">
+                            <TrendingDown size={11} /> Faltante
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700 dark:bg-amber-500/10 dark:text-amber-400">
+                            <TrendingUp size={11} /> Sobrante
+                          </span>
+                        )}
+                      </td>
+                      {esSuperAdmin && (
+                        <td className="px-5 text-right">
+                          <div className="flex items-center justify-end gap-1">
+                            <button
+                              type="button"
+                              onClick={() => setCierreEditando(c)}
+                              title="Editar"
+                              className="inline-flex h-8 w-8 items-center justify-center rounded-[9px] text-gray-400 transition hover:bg-violet-50 hover:text-violet-600 dark:hover:bg-violet-500/10 dark:hover:text-violet-400"
+                            >
+                              <Pencil size={15} />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setCierreEliminando(c)}
+                              title="Eliminar"
+                              className="inline-flex h-8 w-8 items-center justify-center rounded-[9px] text-gray-400 transition hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10 dark:hover:text-red-400"
+                            >
+                              <Trash2 size={15} />
+                            </button>
+                          </div>
+                        </td>
+                      )}
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
 
@@ -256,10 +306,10 @@ export function CierresPage() {
       )}
 
       {cierreEliminando && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl shadow-lg max-w-sm w-full p-6 space-y-4 text-center">
-            <h2 className="font-semibold text-gray-900 text-lg">¿Eliminar este cierre?</h2>
-            <p className="text-sm text-gray-600">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/50 p-4 backdrop-blur-sm">
+          <div className="animate-card-in w-full max-w-sm space-y-4 rounded-[20px] bg-white p-6 text-center shadow-lg dark:bg-gray-800">
+            <h2 className="text-lg font-bold text-gray-900 dark:text-gray-50">¿Eliminar este cierre?</h2>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
               {cierreEliminando.negocios?.nombre} — {cierreEliminando.fecha}
               <br />
               Esta acción es permanente: se borran también sus gastos, propinas y detalle de
@@ -268,7 +318,7 @@ export function CierresPage() {
             </p>
 
             {errorEliminar && (
-              <div className="rounded-lg bg-red-50 text-red-700 text-sm font-medium px-3 py-2 text-left">
+              <div className="rounded-[14px] bg-red-50 px-3.5 py-2.5 text-left text-sm font-medium text-red-700 dark:bg-red-500/10 dark:text-red-400">
                 {errorEliminar}
               </div>
             )}
@@ -278,7 +328,7 @@ export function CierresPage() {
                 type="button"
                 onClick={() => setCierreEliminando(null)}
                 disabled={eliminando}
-                className="flex-1 rounded-lg border border-gray-300 text-gray-600 font-medium py-2 hover:bg-gray-50 disabled:opacity-50"
+                className="flex-1 rounded-[14px] border border-gray-200 py-2.5 font-semibold text-gray-600 transition hover:bg-gray-50 disabled:opacity-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-900/40"
               >
                 Cancelar
               </button>
@@ -286,7 +336,7 @@ export function CierresPage() {
                 type="button"
                 onClick={eliminarCierre}
                 disabled={eliminando}
-                className="flex-1 rounded-lg bg-red-600 text-white font-medium py-2 hover:bg-red-700 disabled:opacity-50"
+                className="flex-1 rounded-[14px] bg-red-600 py-2.5 font-semibold text-white transition hover:bg-red-700 disabled:opacity-50"
               >
                 {eliminando ? 'Eliminando...' : 'Sí, eliminar'}
               </button>

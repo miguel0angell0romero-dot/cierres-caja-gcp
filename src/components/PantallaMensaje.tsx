@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react'
 
 const estilos = {
-  info: 'bg-yellow-50 text-yellow-700',
-  error: 'bg-red-50 text-red-700',
+  info: 'bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400',
+  error: 'bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-400',
 } as const
 
 export function PantallaMensaje({
@@ -13,9 +13,9 @@ export function PantallaMensaje({
   children: ReactNode
 }) {
   return (
-    <div className="min-h-svh flex items-center justify-center bg-gray-50 px-4">
+    <div className="flex min-h-svh items-center justify-center bg-gray-50 px-4 dark:bg-gray-900">
       <div
-        className={`max-w-md w-full rounded-xl p-6 shadow-md text-center text-sm font-medium ${estilos[tipo]}`}
+        className={`w-full max-w-md rounded-[20px] p-6 text-center text-sm font-medium shadow-md ${estilos[tipo]}`}
       >
         {children}
       </div>

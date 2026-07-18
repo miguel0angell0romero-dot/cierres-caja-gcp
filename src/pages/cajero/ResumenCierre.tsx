@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react'
+import { CheckCircle2, Share2 } from 'lucide-react'
 import { formatCOP } from '../../lib/money'
 import { compartirElementoComoImagen } from '../../lib/compartir'
 
@@ -25,11 +26,17 @@ interface PropinaResumenData {
   nota: string | null
 }
 
+const seccionCls =
+  'space-y-1 rounded-[20px] border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-800'
+const tituloCls = 'mb-1.5 text-[15px] font-bold tracking-tight text-gray-900 dark:text-gray-50'
+
 function Fila({ label, valor, resaltado }: { label: string; valor: string; resaltado?: boolean }) {
   return (
-    <div className="flex justify-between text-sm py-1">
-      <span className="text-gray-500">{label}</span>
-      <span className={resaltado ? 'font-semibold text-gray-900' : 'text-gray-800'}>{valor}</span>
+    <div className="flex justify-between py-1 text-sm">
+      <span className="text-gray-500 dark:text-gray-400">{label}</span>
+      <span className={resaltado ? 'font-bold text-gray-900 dark:text-gray-50' : 'text-gray-800 dark:text-gray-200'}>
+        {valor}
+      </span>
     </div>
   )
 }
@@ -87,14 +94,14 @@ export function ResumenCierre({
   }
 
   return (
-    <div className="max-w-md mx-auto space-y-4">
-      <div ref={contenidoRef} className="space-y-4 bg-gray-50">
-        <div className="rounded-xl bg-green-50 text-green-700 text-sm font-medium px-4 py-3 text-center">
-          Cierre guardado — {negocioNombre} — {fecha}
+    <div className="mx-auto max-w-md space-y-4">
+      <div ref={contenidoRef} className="space-y-4 bg-gray-50 dark:bg-gray-900">
+        <div className="animate-fade-up flex items-center justify-center gap-2 rounded-[14px] bg-green-50 px-4 py-3 text-center text-sm font-semibold text-green-700 dark:bg-green-500/10 dark:text-green-400">
+          <CheckCircle2 size={16} /> Cierre guardado — {negocioNombre} — {fecha}
         </div>
 
-        <section className="rounded-xl bg-white p-4 shadow-sm space-y-1">
-          <h2 className="font-semibold text-gray-900 mb-1">Ventas</h2>
+        <section className={seccionCls}>
+          <h2 className={tituloCls}>Ventas</h2>
           <Fila label="Efectivo" valor={formatCOP(cierre.venta_efectivo)} />
           <Fila label="QR" valor={formatCOP(cierre.venta_qr)} />
           <Fila label="Nequi/Daviplata" valor={formatCOP(cierre.venta_nequi)} />
@@ -103,20 +110,16 @@ export function ResumenCierre({
           <Fila label="Total venta" valor={formatCOP(totalVenta)} resaltado />
         </section>
 
-        <section className="rounded-xl bg-white p-4 shadow-sm space-y-1">
-          <h2 className="font-semibold text-gray-900 mb-1">Cuadre de datáfono</h2>
+        <section className={seccionCls}>
+          <h2 className={tituloCls}>Cuadre de datáfono</h2>
           <Fila label="Datáfono liquidado" valor={formatCOP(cierre.datafono_liquidado)} />
           <Fila label="Según sistema" valor={formatCOP(cierre.venta_datafono)} />
-          <Fila
-            label="Diferencia"
-            valor={formatCOP(diferenciaDatafono)}
-            resaltado
-          />
+          <Fila label="Diferencia" valor={formatCOP(diferenciaDatafono)} resaltado />
         </section>
 
         {gastos.length > 0 && (
-          <section className="rounded-xl bg-white p-4 shadow-sm space-y-1">
-            <h2 className="font-semibold text-gray-900 mb-1">Gastos en efectivo</h2>
+          <section className={seccionCls}>
+            <h2 className={tituloCls}>Gastos en efectivo</h2>
             {gastos.map((g, i) => (
               <Fila key={i} label={g.categoria + (g.nota ? ` — ${g.nota}` : '')} valor={formatCOP(g.valor)} />
             ))}
@@ -125,8 +128,8 @@ export function ResumenCierre({
         )}
 
         {propinas.length > 0 && (
-          <section className="rounded-xl bg-white p-4 shadow-sm space-y-1">
-            <h2 className="font-semibold text-gray-900 mb-1">Propinas (entregadas al mesero)</h2>
+          <section className={seccionCls}>
+            <h2 className={tituloCls}>Propinas (entregadas al mesero)</h2>
             {propinas.map((p, i) => (
               <Fila key={i} label={p.nota || `Propina ${i + 1}`} valor={formatCOP(p.valor)} />
             ))}
@@ -134,8 +137,8 @@ export function ResumenCierre({
           </section>
         )}
 
-        <section className="rounded-xl bg-white p-4 shadow-sm space-y-1">
-          <h2 className="font-semibold text-gray-900 mb-1">Cuadre de efectivo</h2>
+        <section className={seccionCls}>
+          <h2 className={tituloCls}>Cuadre de efectivo</h2>
           <Fila label="Base" valor={formatCOP(cierre.base_efectivo)} />
           <Fila label="Ventas efectivo" valor={formatCOP(cierre.venta_efectivo)} />
           <Fila label="Gastos" valor={`- ${formatCOP(totalGastos)}`} />
@@ -153,13 +156,13 @@ export function ResumenCierre({
       </div>
 
       {errorCompartir && (
-        <div className="rounded-lg bg-red-50 text-red-700 text-sm font-medium px-4 py-3">
+        <div className="rounded-[14px] bg-red-50 px-4 py-3 text-sm font-medium text-red-700 dark:bg-red-500/10 dark:text-red-400">
           No se pudo compartir: {errorCompartir}
         </div>
       )}
 
       {avisoDescarga && (
-        <div className="rounded-lg bg-yellow-50 text-yellow-700 text-sm font-medium px-4 py-3">
+        <div className="rounded-[14px] bg-amber-50 px-4 py-3 text-sm font-medium text-amber-700 dark:bg-amber-500/10 dark:text-amber-400">
           Tu navegador no permite compartir directo, así que se descargó la imagen del cierre —
           envíala manualmente por WhatsApp.
         </div>
@@ -169,9 +172,9 @@ export function ResumenCierre({
         type="button"
         onClick={compartir}
         disabled={compartiendo}
-        className="w-full rounded-lg bg-green-600 text-white font-medium py-3 hover:bg-green-700 disabled:opacity-50"
+        className="flex w-full items-center justify-center gap-2 rounded-[14px] bg-gradient-to-br from-green-600 to-green-500 py-3.5 font-semibold text-white shadow-[0_10px_24px_-10px_rgba(22,163,74,0.55)] transition hover:-translate-y-px hover:scale-[1.015] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:scale-100"
       >
-        {compartiendo ? 'Generando imagen...' : 'Compartir por WhatsApp'}
+        <Share2 size={16} /> {compartiendo ? 'Generando imagen...' : 'Compartir por WhatsApp'}
       </button>
     </div>
   )

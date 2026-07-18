@@ -231,25 +231,25 @@ export function NuevoCierrePage() {
   const baseEfectivo = negocio?.base_efectivo ?? 0
 
   return (
-    <div className="max-w-md mx-auto space-y-4 pb-8">
-      <div className="rounded-xl bg-white p-4 shadow-sm flex items-center gap-3">
+    <div className="mx-auto max-w-md space-y-4 pb-8">
+      <div className="flex items-center gap-3 rounded-[20px] border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-800">
         {urlLogoNegocio(negocio?.logo_path ?? null) && (
           <img
             src={urlLogoNegocio(negocio?.logo_path ?? null)!}
             alt={negocio?.nombre}
-            className="h-12 w-12 rounded-lg object-cover"
+            className="h-12 w-12 rounded-[14px] object-cover"
           />
         )}
         <div>
-          <p className="font-semibold text-gray-900">{negocio?.nombre}</p>
-          <p className="text-sm text-gray-500">
+          <p className="font-bold tracking-tight text-gray-900 dark:text-gray-50">{negocio?.nombre}</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
             {hoy} — Base: {formatCOP(baseEfectivo)}
           </p>
         </div>
       </div>
 
       {avisoRestaurado && (
-        <div className="rounded-lg bg-yellow-50 text-yellow-700 text-sm font-medium px-4 py-3">
+        <div className="rounded-[14px] bg-amber-50 px-4 py-3 text-sm font-medium text-amber-700 dark:bg-amber-500/10 dark:text-amber-400">
           Se restauró un borrador guardado en este dispositivo. Si habías adjuntado fotos de
           gastos, debes volver a seleccionarlas.
         </div>
